@@ -1,41 +1,80 @@
-"""Render graph + complexity metrics and Jev structure scores as a Rich terminal report."""
+"""Render graph/complexity metrics and Jev structure+spec scores as a Rich terminal report."""
+
+import re
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from app.jev_scorer import STRUCTURE_WEIGHTS, weighted_structure_total
+from app.jev_scorer import SPEC_WEIGHTS, STRUCTURE_WEIGHTS, weighted_spec_total, weighted_structure_total
+
+TEMPLATED_PLACEHOLDER_RE = re.compile(r"\[(TODO|TBD|description here|FIXME)\]", re.IGNORECASE)
 
 
-def compute_graph_red_flags(metrics: dict) -> list[str]:
+def compute_graph_red_flags(metrics: dict, red_flags_cfg: dict) -> list[str]:
     flags = []
+    cycle_threshold = red_flags_cfg.get("circular_deps_involving_more_than", 3)
+    fan_multiple = red_flags_cfg.get("fan_coupling_multiple", 5.0)
+    betweenness_multiple = red_flags_cfg.get("betweenness_multiple", 10.0)
 
     for cycle in metrics["circular_dependencies"]:
         touched = len(cycle) - 1  # cycle list repeats the start node at the end
-        if touched > 3:
+        if touched > cycle_threshold:
             flags.append(f"Circular dependency touches {touched} modules: {' -> '.join(cycle)}")
 
     avg_in, avg_out = metrics["avg_fan_in"], metrics["avg_fan_out"]
-    if avg_in > 0 and metrics["max_fan_in"] > 5 * avg_in:
-        flags.append(f"Max fan-in {metrics['max_fan_in']} is > 5x the average ({avg_in:.1f})")
-    if avg_out > 0 and metrics["max_fan_out"] > 5 * avg_out:
-        flags.append(f"Max fan-out {metrics['max_fan_out']} is > 5x the average ({avg_out:.1f})")
+    if avg_in > 0 and metrics["max_fan_in"] > fan_multiple * avg_in:
+        flags.append(
+            f"Max fan-in {metrics['max_fan_in']} is > {fan_multiple:g}x the average ({avg_in:.1f})"
+        )
+    if avg_out > 0 and metrics["max_fan_out"] > fan_multiple * avg_out:
+        flags.append(
+            f"Max fan-out {metrics['max_fan_out']} is > {fan_multiple:g}x the average ({avg_out:.1f})"
+        )
 
     avg_b = metrics["avg_betweenness_centrality"]
-    if avg_b > 0 and metrics["max_betweenness_centrality"] > 10 * avg_b:
+    if avg_b > 0 and metrics["max_betweenness_centrality"] > betweenness_multiple * avg_b:
         top = metrics["top_betweenness_nodes"][0]["node"]
-        flags.append(f"Betweenness bottleneck: '{top}' is > 10x the average betweenness")
+        flags.append(f"Betweenness bottleneck: '{top}' is > {betweenness_multiple:g}x the average betweenness")
 
     return flags
 
 
-def compute_complexity_red_flags(metrics: dict) -> list[str]:
+def compute_complexity_red_flags(metrics: dict, red_flags_cfg: dict) -> list[str]:
+    ccn_threshold = red_flags_cfg.get("max_ccn_threshold", 20)
     flags = []
     for func in metrics["functions_above_complexity_threshold"]:
-        if func["ccn"] > 20:
+        if func["ccn"] > ccn_threshold:
             flags.append(
-                f"Function `{func['name']}` in {func['file']} has CCN {func['ccn']} (> 20)"
+                f"Function `{func['name']}` in {func['file']} has CCN {func['ccn']} (> {ccn_threshold})"
             )
+    return flags
+
+
+def compute_spec_red_flags(
+    spec_scores: dict, spec_text: str, codebase_modules: list[str], red_flags_cfg: dict
+) -> list[str]:
+    flags = []
+
+    choice_confidence_low = red_flags_cfg.get("choice_confidence_low", 0.45)
+    weakest = spec_scores["weakest_dimension"]
+    if weakest["confidence"] < choice_confidence_low:
+        flags.append(
+            f"Weakest-dimension signal is ambiguous: '{weakest['choice']}' at only "
+            f"{weakest['confidence']:.0%} confidence (all dimensions may be equally weak)"
+        )
+
+    min_modules = red_flags_cfg.get("min_modules_mentioned", 2)
+    spec_lower = spec_text.lower()
+    mentioned = sum(1 for m in codebase_modules if m.rsplit("/", 1)[-1].lower() in spec_lower)
+    if mentioned < min_modules:
+        flags.append(
+            f"Only {mentioned} codebase file(s) appear to be mentioned in the spec (< {min_modules})"
+        )
+
+    if red_flags_cfg.get("templated_boilerplate") and TEMPLATED_PLACEHOLDER_RE.search(spec_text):
+        flags.append("Spec still contains template placeholders (e.g. [TODO], [TBD])")
+
     return flags
 
 
@@ -90,7 +129,7 @@ def render_complexity_section(console: Console, metrics: dict) -> None:
         console.print(worst)
 
 
-def render_jev_structure_section(console: Console, jev_scores: dict) -> None:
+def render_jev_structure_section(console: Console, jev_scores: dict) -> float:
     table = Table(title="Structure Quality (Jev)", header_style="bold magenta")
     table.add_column("Dimension")
     table.add_column("Weight", justify="right")
@@ -107,25 +146,61 @@ def render_jev_structure_section(console: Console, jev_scores: dict) -> None:
             f"{answer['confidence']:.0%}",
         )
     console.print(table)
-    console.print(f"[bold]Structure Weighted Total: {weighted_structure_total(jev_scores):.1f} / 10[/bold]")
+    total = weighted_structure_total(jev_scores)
+    console.print(f"[bold]Structure Weighted Total: {total:.1f} / 10[/bold]")
+    return total
+
+
+def render_jev_spec_section(console: Console, spec_scores: dict) -> float:
+    weakest = spec_scores["weakest_dimension"]
+    console.print(
+        f"Weakest Dimension (diagnostic): [yellow]{weakest['choice']}[/yellow] "
+        f"({weakest['confidence']:.0%} confidence)"
+    )
+
+    table = Table(title="Spec Quality (Jev)", header_style="bold magenta")
+    table.add_column("Dimension")
+    table.add_column("Weight", justify="right")
+    table.add_column("Score", justify="right")
+    table.add_column("Jev Answer", justify="right")
+    table.add_column("Confidence", justify="right")
+    for dim, weight in SPEC_WEIGHTS.items():
+        answer = spec_scores[dim]
+        table.add_row(
+            dim.replace("_", " ").title(),
+            f"{weight:.0%}",
+            f"{answer['score_0_10']:.1f} / 10",
+            answer["answer"],
+            f"{answer['confidence']:.0%}",
+        )
+    console.print(table)
+    total = weighted_spec_total(spec_scores)
+    console.print(f"[bold]Spec Weighted Total: {total:.1f} / 10[/bold]")
+    return total
 
 
 def render_report(
     console: Console,
     team_name: str,
     graph_metrics: dict,
+    config: dict,
     complexity_metrics: dict | None = None,
     jev_scores: dict | None = None,
     jev_skip_reason: str = "Jev structure scoring skipped.",
+    spec_scores: dict | None = None,
+    spec_text: str | None = None,
+    codebase_modules: list[str] | None = None,
+    spec_skip_reason: str = "Jev spec scoring skipped.",
 ) -> None:
     console.print(Panel(f"[bold]scorer_cli[/bold] — Structure Report: [cyan]{team_name}[/cyan]"))
+    red_flags_cfg = config.get("red_flags", {})
 
     render_graph_section(console, graph_metrics)
-    flags = compute_graph_red_flags(graph_metrics)
+    flags = compute_graph_red_flags(graph_metrics, red_flags_cfg)
 
     if complexity_metrics is not None:
         render_complexity_section(console, complexity_metrics)
-        flags += compute_complexity_red_flags(complexity_metrics)
+        flags += compute_complexity_red_flags(complexity_metrics, red_flags_cfg)
     else:
         console.print(
             Panel(
@@ -135,10 +210,32 @@ def render_report(
             )
         )
 
+    structure_total = None
     if jev_scores is not None:
-        render_jev_structure_section(console, jev_scores)
+        structure_total = render_jev_structure_section(console, jev_scores)
     else:
         console.print(Panel(jev_skip_reason, title="Structure Quality (Jev)", border_style="yellow"))
+
+    spec_total = None
+    if spec_scores is not None:
+        spec_total = render_jev_spec_section(console, spec_scores)
+        flags += compute_spec_red_flags(
+            spec_scores, spec_text or "", codebase_modules or [], red_flags_cfg
+        )
+    else:
+        console.print(Panel(spec_skip_reason, title="Spec Quality (Jev)", border_style="yellow"))
+
+    if structure_total is not None and spec_total is not None:
+        weights = config.get("weights", {"structure": 0.5, "spec": 0.5})
+        combined = structure_total * weights["structure"] + spec_total * weights["spec"]
+        console.print(
+            Panel(
+                f"[bold]{combined:.1f} / 10[/bold]  "
+                f"(structure {weights['structure']:.0%} + spec {weights['spec']:.0%})",
+                title="Combined Score",
+                border_style="cyan",
+            )
+        )
 
     if flags:
         body = "\n".join(f"[red]⚠[/red]  {f}" for f in flags)

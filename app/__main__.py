@@ -5,10 +5,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from rich.console import Console
 
+from app.config import load_config
 from app.metrics import (
     build_file_graph,
     compute_complexity_metrics_from_zip,
     compute_graph_metrics,
+    extract_codebase_modules,
+    extract_spec_text_from_zip,
     load_graph,
 )
 from app.report_generator import render_report
@@ -18,6 +21,7 @@ FIXTURES_DIR = Path("fixtures")
 
 def report(team_name: str) -> None:
     load_dotenv()
+    config = load_config()
 
     team_dir = FIXTURES_DIR / team_name
     graph_path = team_dir / "graph.json"
@@ -27,32 +31,73 @@ def report(team_name: str) -> None:
     raw = load_graph(graph_path)
     file_graph = build_file_graph(raw)
     graph_metrics = compute_graph_metrics(file_graph)
+    codebase_modules = extract_codebase_modules(raw)
 
     source_zip = team_dir / "source.zip"
     complexity_metrics = (
         compute_complexity_metrics_from_zip(source_zip) if source_zip.exists() else None
     )
 
-    jev_scores = None
+    sdd_zip = team_dir / "sdd.zip"
+    spec_text = extract_spec_text_from_zip(sdd_zip) if sdd_zip.exists() else None
+
+    have_key = bool(os.environ.get("TYPESAFE_API_KEY"))
+    structure_response = spec_response = None
+    jev_scores = spec_scores = None
     jev_skip_reason = "No TYPESAFE_API_KEY found."
+    spec_skip_reason = "No TYPESAFE_API_KEY found."
+
     if complexity_metrics is None:
         jev_skip_reason = "No source.zip found — complexity metrics needed for Jev scoring."
-    elif os.environ.get("TYPESAFE_API_KEY"):
+    if spec_text is None:
+        spec_skip_reason = "No sdd.zip found — spec text needed for Jev scoring."
+
+    if have_key and (complexity_metrics is not None or spec_text is not None):
         from typesafe_sdk import TypeSafeAPIError, TypeSafeClient
 
-        from app.jev_scorer import build_jev_log, score_structure_with_response, write_jev_log
+        from app.jev_scorer import (
+            build_jev_log,
+            score_spec_with_response,
+            score_structure_with_response,
+            write_jev_log,
+        )
 
-        try:
-            jev_scores, response = score_structure_with_response(
-                graph_metrics, complexity_metrics, TypeSafeClient()
+        client = TypeSafeClient()
+
+        if complexity_metrics is not None:
+            try:
+                jev_scores, structure_response = score_structure_with_response(
+                    graph_metrics, complexity_metrics, client
+                )
+            except TypeSafeAPIError as e:
+                jev_skip_reason = f"Jev scoring failed: {e}"
+
+        if spec_text is not None:
+            try:
+                spec_scores, spec_response = score_spec_with_response(
+                    spec_text, codebase_modules, client, config.get("spec_rubric")
+                )
+            except TypeSafeAPIError as e:
+                spec_skip_reason = f"Jev scoring failed: {e}"
+
+        if structure_response is not None or spec_response is not None:
+            log_path = write_jev_log(
+                team_dir, build_jev_log(team_name, structure_response, spec_response)
             )
-            log_path = write_jev_log(team_dir, build_jev_log(team_name, response))
             print(f"Jev response logged to {log_path}")
-        except TypeSafeAPIError as e:
-            jev_skip_reason = f"Jev scoring failed: {e}"
 
     render_report(
-        Console(), team_name, graph_metrics, complexity_metrics, jev_scores, jev_skip_reason
+        Console(),
+        team_name,
+        graph_metrics,
+        config,
+        complexity_metrics,
+        jev_scores,
+        jev_skip_reason,
+        spec_scores,
+        spec_text,
+        codebase_modules,
+        spec_skip_reason,
     )
 
 

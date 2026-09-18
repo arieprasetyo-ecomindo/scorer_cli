@@ -7,6 +7,7 @@ dependencies = [
     "lizard>=1.24.0",
     "networkx>=3.6.1",
     "python-dotenv>=1.2.3",
+    "pyyaml>=6.0.3",
     "rich>=15.0.0",
     "typesafe-sdk>=0.7.0",
 ]

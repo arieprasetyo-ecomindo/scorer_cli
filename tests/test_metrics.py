@@ -2,7 +2,12 @@ from pathlib import Path
 
 import networkx as nx
 
-from app.metrics import build_file_graph, compute_graph_metrics, load_graph
+from app.metrics import (
+    build_file_graph,
+    compute_graph_metrics,
+    extract_codebase_modules,
+    load_graph,
+)
 
 SAMPLE_GRAPH = Path(__file__).parent.parent / "fixtures" / "sample_team_phoenix" / "graph.json"
 
@@ -142,3 +147,23 @@ def test_metrics_smoke_on_real_sample_graph():
     assert m["node_count"] == g.number_of_nodes()
     assert m["max_fan_in"] >= m["avg_fan_in"]
     assert -1.0 <= m["modularity_score"] <= 1.0
+
+
+def test_extract_codebase_modules_dedupes_and_sorts():
+    raw = {
+        "nodes": [
+            make_node("a", "fileB.py"),
+            make_node("b", "fileA.py"),
+            make_node("c", "fileB.py"),
+            make_node("d", ""),
+            make_node("e", "doc.md", file_type="rationale"),
+        ]
+    }
+    assert extract_codebase_modules(raw) == ["fileA.py", "fileB.py"]
+
+
+def test_extract_codebase_modules_on_real_sample_graph():
+    raw = load_graph(SAMPLE_GRAPH)
+    modules = extract_codebase_modules(raw)
+    assert "app/main.py" in modules
+    assert modules == sorted(modules)

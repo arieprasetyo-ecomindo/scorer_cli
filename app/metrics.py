@@ -189,3 +189,43 @@ def compute_complexity_metrics_from_zip(zip_path: str | Path) -> dict:
     with tempfile.TemporaryDirectory() as tmp_dir:
         extract_source(zip_path, tmp_dir)
         return compute_complexity_metrics(tmp_dir)
+
+
+def extract_codebase_modules(raw_graph: dict) -> list[str]:
+    """The list of real source files in a submission, for spec-to-code traceability."""
+    return sorted(
+        {
+            n["source_file"]
+            for n in raw_graph["nodes"]
+            if n.get("file_type") == "code" and n.get("source_file")
+        }
+    )
+
+
+# Prose/spec document extensions. Deliberately framework-agnostic: sdd.zip may be
+# structured as OpenSpec (openspec/specs/*/spec.md), a plain SPEC.md, ADRs, etc. -
+# we don't parse any particular layout, just concatenate every doc file we find.
+SPEC_TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".rst"}
+
+
+def _iter_spec_files(root: Path):
+    for path in sorted(root.rglob("*")):
+        if path.is_file() and path.suffix.lower() in SPEC_TEXT_EXTENSIONS:
+            yield path
+
+
+def extract_spec_text(sdd_dir: str | Path) -> str:
+    """Concatenate every spec/doc file found, each preceded by a filename header."""
+    sdd_dir = Path(sdd_dir)
+    sections = []
+    for path in _iter_spec_files(sdd_dir):
+        rel_path = path.relative_to(sdd_dir)
+        content = path.read_text(errors="replace")
+        sections.append(f"## {rel_path}\n\n{content}")
+    return "\n\n".join(sections)
+
+
+def extract_spec_text_from_zip(zip_path: str | Path) -> str:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        extract_source(zip_path, tmp_dir)
+        return extract_spec_text(tmp_dir)

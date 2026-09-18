@@ -64,18 +64,21 @@ def test_weighted_structure_total_mixed_scores():
     assert weighted_structure_total(result) == pytest.approx(10 * 0.21)
 
 
-def test_build_jev_log_captures_raw_response():
+def test_build_jev_log_captures_raw_structure_response():
     canned = {dim: {"score": 3, "confidence": 0.8} for dim in STRUCTURE_LEVEL_CRITERIA}
     _, response = score_structure_with_response({}, {}, FakeClient(canned))
 
-    log = build_jev_log("sample_team_phoenix", response)
+    log = build_jev_log("sample_team_phoenix", structure_response=response)
 
     assert log["team"] == "sample_team_phoenix"
-    assert log["model"] == "fake-model"
-    assert log["usage"] == {"input_tokens": 100, "output_tokens": 20}
-    assert set(log["structure"].keys()) == set(STRUCTURE_LEVEL_CRITERIA.keys())
-    assert log["structure"]["coupling"]["score"] == 3
-    assert log["structure"]["coupling"]["probabilities"] == {0: 0.1, 1: 0.1, 2: 0.1, 3: 0.1, 4: 0.6}
+    assert log["structure"]["model"] == "fake-model"
+    assert log["structure"]["usage"] == {"input_tokens": 100, "output_tokens": 20}
+    assert set(log["structure"]["answers"].keys()) == set(STRUCTURE_LEVEL_CRITERIA.keys())
+    assert log["structure"]["answers"]["coupling"]["score"] == 3
+    assert log["structure"]["answers"]["coupling"]["probabilities"] == {
+        0: 0.1, 1: 0.1, 2: 0.1, 3: 0.1, 4: 0.6,
+    }
+    assert "spec" not in log
 
 
 def test_write_jev_log_writes_json_file(tmp_path):
