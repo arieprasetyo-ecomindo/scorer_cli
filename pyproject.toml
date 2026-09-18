@@ -1,0 +1,24 @@
+[project]
+name = "scorer-cli"
+version = "0.1.0"
+description = "Automated hackathon submission scoring: code structure + Spec-Driven Development quality."
+requires-python = ">=3.11"
+dependencies = [
+    "networkx>=3.6.1",
+    "rich>=15.0.0",
+]
+
+[project.scripts]
+score-cli = "app.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
