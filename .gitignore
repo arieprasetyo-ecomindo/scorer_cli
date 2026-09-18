@@ -47,4 +47,10 @@ Thumbs.db
 # Graphify
 graphify-out/cache/
 
+# Real participant submissions aren't committed, but the sample fixture the
+# test suite depends on (fixtures/sample_team_phoenix/) is tracked.
 fixtures/*
+!fixtures/sample_team_phoenix
+
+# Generated per-run output, not part of the fixture itself
+fixtures/*/jev_log.json

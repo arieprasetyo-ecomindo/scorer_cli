@@ -140,8 +140,8 @@ Copy `config.yaml.example` to `config.yaml` and fill in:
 ```yaml
 typesafe:
   api_key_env: "TYPESAFE_API_KEY"
-  api_endpoint: "https://api.typesafe.ai/v1"
-  model: "jev"
+  api_endpoint: "https://api.typesafe.ai"
+  model: "jev-latest"
 
 report_generation:
   api_key_env: "ANTHROPIC_API_KEY"

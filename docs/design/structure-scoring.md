@@ -4,11 +4,25 @@ This document defines the 6 **Score** primitives used to judge code structure qu
 
 ## Overview
 
-Each dimension is scored 1–5 (Critical → Excellent). Jev returns:
-- Top level (1–5)
-- Confidence (0–1)
+Each dimension has 5 rubric levels, Critical → Excellent. Via the real `typesafe-sdk`
+package, each is a `Score` question whose `criteria` is an ordered list of 5 level
+descriptions, indexed 0 (Critical) through 4 (Excellent) — the SDK is zero-indexed,
+not 1–5.
 
-Code then maps: Level 1→0, Level 2→2.5, Level 3→5, Level 4→7.5, Level 5→10.
+Jev's `ScoreAnswer` returns:
+- **`score`** (float): a *continuous*, probability-weighted average over the 5
+  levels (e.g. `3.4`, not a single picked level)
+- **`confidence`** (float, 0–1): a separate certainty measure
+- **`legend`** (`dict[int, str]`): the criteria text, keyed by level index
+- **`probabilities`** (`dict[int, float]`): likelihood of each level
+
+Code rescales `score` (0..4) to 0..10 for reporting:
+`score_0_10 = score / (num_levels - 1) * 10` — e.g. `score=4` → `10`, `score=2` → `5`.
+For display, we also derive a nearest integer level via `round(score)` and label it
+from `legend`, but the underlying value used for weighting is the continuous score,
+not the rounded level.
+
+See `app/jev_scorer.py` for the implementation.
 
 ## Input State
 
@@ -49,12 +63,12 @@ All 6 questions receive the same state:
 
 **ID:** `coupling`
 
-**Criteria:**
-- **Level 5 (Excellent):** max fan-in/out within ~2× average (no hotspots)
-- **Level 4 (Good):** One or two hotspot nodes (3–4× avg); not dominant
-- **Level 3 (Fair):** Several hotspots (5–7× avg); some god-modules
-- **Level 2 (Poor):** Pervasive high coupling (max fan-in/out > 7× avg)
-- **Level 1 (Critical):** Tangled mess (max fan-in/out > 10× avg)
+**Criteria** (index: label):
+- **4 (Excellent):** max fan-in/out within ~2× average (no hotspots)
+- **3 (Good):** One or two hotspot nodes (3–4× avg); not dominant
+- **2 (Fair):** Several hotspots (5–7× avg); some god-modules
+- **1 (Poor):** Pervasive high coupling (max fan-in/out > 7× avg)
+- **0 (Critical):** Tangled mess (max fan-in/out > 10× avg)
 
 **Key metrics:** `avg_fan_in`, `max_fan_in`, `avg_fan_out`, `max_fan_out`
 
@@ -64,12 +78,12 @@ All 6 questions receive the same state:
 
 **ID:** `circular_dependencies`
 
-**Criteria:**
-- **Level 5 (Excellent):** Zero cycles
-- **Level 4 (Good):** 1 isolated cycle (non-core area)
-- **Level 3 (Fair):** 2–3 cycles
-- **Level 2 (Poor):** 4–6 cycles
-- **Level 1 (Critical):** >6 cycles or spanning multiple core modules
+**Criteria** (index: label):
+- **4 (Excellent):** Zero cycles
+- **3 (Good):** 1 isolated cycle (non-core area)
+- **2 (Fair):** 2–3 cycles
+- **1 (Poor):** 4–6 cycles
+- **0 (Critical):** >6 cycles or spanning multiple core modules
 
 **Key metric:** `circular_dependencies` array length
 
@@ -79,16 +93,16 @@ All 6 questions receive the same state:
 
 **ID:** `dependency_depth`
 
-**Criteria:**
-- **Level 5 (Excellent):** Longest path ≤ log(node_count) × 2 (baseline)
-- **Level 4 (Good):** Path 1.5–2× baseline
-- **Level 3 (Fair):** Path 2–4× baseline
-- **Level 2 (Poor):** Path 4–6× baseline
-- **Level 1 (Critical):** Path >> baseline (spaghetti-like)
+**Criteria** (index: label):
+- **4 (Excellent):** Longest path ≤ log(node_count) × 2 (baseline)
+- **3 (Good):** Path 1.5–2× baseline
+- **2 (Fair):** Path 2–4× baseline
+- **1 (Poor):** Path 4–6× baseline
+- **0 (Critical):** Path >> baseline (spaghetti-like)
 
 **Key metrics:** `longest_dependency_path`, `node_count`
 
-**Example:** 87 nodes → baseline ≈ log(87)×2 ≈ 8.5. Path of 5 is good (Level 4). Path of 15 is poor (Level 2).
+**Example:** 87 nodes → baseline ≈ log(87)×2 ≈ 8.5. Path of 5 is good (index 3). Path of 15 is poor (index 1).
 
 ---
 
@@ -96,12 +110,12 @@ All 6 questions receive the same state:
 
 **ID:** `cyclomatic_complexity`
 
-**Criteria:**
-- **Level 5 (Excellent):** avg CCN ≤ 4, no function above 10
-- **Level 4 (Good):** avg CCN 4–7, < 5% above threshold (CCN > 10)
-- **Level 3 (Fair):** avg CCN 7–12, or 5–15% above threshold
-- **Level 2 (Poor):** avg CCN > 12 or > 15% above threshold
-- **Level 1 (Critical):** avg CCN >> 15 + max CCN > 20
+**Criteria** (index: label):
+- **4 (Excellent):** avg CCN ≤ 4, no function above 10
+- **3 (Good):** avg CCN 4–7, < 5% above threshold (CCN > 10)
+- **2 (Fair):** avg CCN 7–12, or 5–15% above threshold
+- **1 (Poor):** avg CCN > 12 or > 15% above threshold
+- **0 (Critical):** avg CCN >> 15 + max CCN > 20
 
 **Key metrics:** `avg_cyclomatic_complexity`, `max_cyclomatic_complexity`, `functions_above_complexity_threshold` (count & percentage)
 
@@ -111,12 +125,12 @@ All 6 questions receive the same state:
 
 **ID:** `function_size_discipline`
 
-**Criteria:**
-- **Level 5 (Excellent):** avg NLOC ≤ 20, avg params ≤ 3
-- **Level 4 (Good):** avg NLOC 20–40, avg params 3–4
-- **Level 3 (Fair):** avg NLOC 40–70, avg params 4–6
-- **Level 2 (Poor):** avg NLOC > 70 or avg params > 6
-- **Level 1 (Critical):** avg NLOC >> 100 or avg params >> 8
+**Criteria** (index: label):
+- **4 (Excellent):** avg NLOC ≤ 20, avg params ≤ 3
+- **3 (Good):** avg NLOC 20–40, avg params 3–4
+- **2 (Fair):** avg NLOC 40–70, avg params 4–6
+- **1 (Poor):** avg NLOC > 70 or avg params > 6
+- **0 (Critical):** avg NLOC >> 100 or avg params >> 8
 
 **Key metrics:** `avg_function_length_nloc`, `avg_parameter_count`
 
@@ -126,12 +140,12 @@ All 6 questions receive the same state:
 
 **ID:** `betweenness_centrality`
 
-**Criteria:**
-- **Level 5 (Excellent):** max/avg ratio < 3 (no single point of failure)
-- **Level 4 (Good):** ratio 3–6; top nodes plausibly legitimate (server.js, main, router)
-- **Level 3 (Fair):** ratio 6–15; pronounced bottleneck
-- **Level 2 (Poor):** ratio 15–30 or multiple nodes at 10–15×
-- **Level 1 (Critical):** ratio > 30× or severe multi-node bottlenecks
+**Criteria** (index: label):
+- **4 (Excellent):** max/avg ratio < 3 (no single point of failure)
+- **3 (Good):** ratio 3–6; top nodes plausibly legitimate (server.js, main, router)
+- **2 (Fair):** ratio 6–15; pronounced bottleneck
+- **1 (Poor):** ratio 15–30 or multiple nodes at 10–15×
+- **0 (Critical):** ratio > 30× or severe multi-node bottlenecks
 
 **Important caveat:** Entry points (server.js, main) naturally have high betweenness. Check node *names* — if legitimate role, don't penalize.
 
@@ -155,8 +169,8 @@ weights:
 
 **Weighted Total Formula:**
 ```
-structure_score = Σ(level_to_score[level_i] × weight_i)
-where level_to_score = {1: 0, 2: 2.5, 3: 5, 4: 7.5, 5: 10}
+score_0_10_i = raw_score_i / (num_levels - 1) * 10   # raw_score_i is Jev's continuous 0..4 score
+structure_score = Σ(score_0_10_i × weight_i)
 ```
 
 ---
@@ -174,34 +188,36 @@ Automatically checked (not via Jev) after scoring:
 
 ## Implementation Example
 
+Real package: `typesafe-sdk` (`uv add typesafe-sdk`). Note `typesafe` on PyPI is an
+unrelated package — do not install it.
+
 ```python
-from typesafe import jev_client
+from typesafe_sdk import Score, TypeSafeClient
 
-questions = [
-    {
-        "id": "coupling",
-        "type": "score",
-        "instructions": "Rate the severity of coupling (interdependencies)...",
-        "state": metrics_state,
-        "criteria": [
-            {"level": 1, "description": "Pervasive high coupling (max > 10× avg)"},
-            {"level": 2, "description": "Several god-modules; high coupling"},
-            {"level": 3, "description": "One or two hotspots; moderate"},
-            {"level": 4, "description": "Isolated hotspots; mostly even"},
-            {"level": 5, "description": "Low, even coupling; excellent"},
-        ]
-    },
-    # ... (questions 2–6, similar structure)
-]
+client = TypeSafeClient()  # reads TYPESAFE_API_KEY; model defaults to "jev-latest"
 
-response = jev_client.ask(model="jev", questions=questions)
+questions = {
+    "coupling": Score(
+        instructions="Rate the coupling of this codebase using graph_metrics in state.",
+        criteria=[
+            "Critical: tangled mess (max > 10x avg)",       # index 0
+            "Poor: pervasive high coupling (max > 7x avg)",  # index 1
+            "Fair: several hotspots (5-7x avg)",             # index 2
+            "Good: one or two hotspots (3-4x avg)",          # index 3
+            "Excellent: low, even coupling (~2x avg)",       # index 4
+        ],
+    ),
+    # ... (5 more Score questions, same shape)
+}
 
-for q_id, answer in response.items():
-    level = answer.level  # 1–5
-    confidence = answer.confidence  # 0–1
-    score_0_10 = (level - 1) * 2.5
-    print(f"{q_id}: Level {level} ({confidence:.0%}) → {score_0_10}")
+response = client.system_one(metrics_state, questions)
+
+for dim, answer in response.scores.items():
+    score_0_10 = answer.score / (len(questions[dim].criteria) - 1) * 10
+    print(f"{dim}: raw={answer.score:.2f} confidence={answer.confidence:.0%} -> {score_0_10:.1f}/10")
 ```
+
+See `app/jev_scorer.py` for the actual implementation (`score_structure()`).
 
 ---
 

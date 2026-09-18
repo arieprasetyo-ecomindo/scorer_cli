@@ -216,7 +216,11 @@ combined_score = (structure_weighted_total × 0.5) + (spec_weighted_total × 0.5
 
 ## Confidence Interpretation
 
-Each Jev answer comes with confidence (0–1).
+Each Jev answer comes with confidence (0–1). For the 6 structure dimensions (Score
+primitives), this confidence is returned directly by Jev alongside a continuous
+score. For the 5 spec dimensions (Noul primitives), Jev returns only a single
+yes-probability; code derives both the yes/no answer and this confidence from it
+(`confidence = abs(probability - 0.5) * 2`) — see `docs/design/spec-scoring.md`.
 
 | Confidence Range | Meaning |
 |------------------|---------|

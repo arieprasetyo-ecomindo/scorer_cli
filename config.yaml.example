@@ -6,11 +6,12 @@ typesafe:
   # API key from TypeSafe dashboard (store in env var or .env)
   api_key_env: "TYPESAFE_API_KEY"
 
-  # TypeSafe API endpoint (or set to custom endpoint if self-hosted)
-  api_endpoint: "https://api.typesafe.ai/v1"
+  # TypeSafe API endpoint (typesafe-sdk's own default; only set this if self-hosting)
+  api_endpoint: "https://api.typesafe.ai"
 
-  # Model selection (currently "jev" for System One)
-  model: "jev"
+  # Model selection. Must be "jev-latest" (or a pinned version like "jev-1.13.0") -
+  # the real typesafe-sdk rejects the bare name "jev" as an unknown model.
+  model: "jev-latest"
 
   # Retry policy for Jev API calls
   max_retries: 1

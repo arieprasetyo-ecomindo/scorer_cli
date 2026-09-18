@@ -1,8 +1,10 @@
-"""Render graph + complexity metrics as a Rich terminal report."""
+"""Render graph + complexity metrics and Jev structure scores as a Rich terminal report."""
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
+from app.jev_scorer import STRUCTURE_WEIGHTS, weighted_structure_total
 
 
 def compute_graph_red_flags(metrics: dict) -> list[str]:
@@ -88,11 +90,33 @@ def render_complexity_section(console: Console, metrics: dict) -> None:
         console.print(worst)
 
 
+def render_jev_structure_section(console: Console, jev_scores: dict) -> None:
+    table = Table(title="Structure Quality (Jev)", header_style="bold magenta")
+    table.add_column("Dimension")
+    table.add_column("Weight", justify="right")
+    table.add_column("Score", justify="right")
+    table.add_column("Jev Level", justify="right")
+    table.add_column("Confidence", justify="right")
+    for dim, weight in STRUCTURE_WEIGHTS.items():
+        answer = jev_scores[dim]
+        table.add_row(
+            dim.replace("_", " ").title(),
+            f"{weight:.0%}",
+            f"{answer['score_0_10']:.1f} / 10",
+            f"{answer['level']} ({answer['level_label']})",
+            f"{answer['confidence']:.0%}",
+        )
+    console.print(table)
+    console.print(f"[bold]Structure Weighted Total: {weighted_structure_total(jev_scores):.1f} / 10[/bold]")
+
+
 def render_report(
     console: Console,
     team_name: str,
     graph_metrics: dict,
     complexity_metrics: dict | None = None,
+    jev_scores: dict | None = None,
+    jev_skip_reason: str = "Jev structure scoring skipped.",
 ) -> None:
     console.print(Panel(f"[bold]scorer_cli[/bold] — Structure Report: [cyan]{team_name}[/cyan]"))
 
@@ -110,6 +134,11 @@ def render_report(
                 border_style="yellow",
             )
         )
+
+    if jev_scores is not None:
+        render_jev_structure_section(console, jev_scores)
+    else:
+        console.print(Panel(jev_skip_reason, title="Structure Quality (Jev)", border_style="yellow"))
 
     if flags:
         body = "\n".join(f"[red]⚠[/red]  {f}" for f in flags)

@@ -1,0 +1,945 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "app/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 8,
+      "norm_label": "__init__.py",
+      "id": "app_init"
+    },
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "main.py",
+      "id": "app_main"
+    },
+    {
+      "label": "_format_mmss()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L27",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "_format_mmss()",
+      "id": "app_main_format_mmss"
+    },
+    {
+      "label": "_fragment_name()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "community": 4,
+      "norm_label": "_fragment_name()",
+      "id": "app_main_fragment_name"
+    },
+    {
+      "label": "Phase",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "community": 4,
+      "norm_label": "phase",
+      "id": "phase"
+    },
+    {
+      "label": "index()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "index()",
+      "id": "app_main_index"
+    },
+    {
+      "label": "Request",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "request",
+      "id": "request"
+    },
+    {
+      "label": "HTMLResponse",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "_origin": "ast",
+      "community": 6,
+      "norm_label": "htmlresponse",
+      "id": "htmlresponse"
+    },
+    {
+      "label": "timer_fragment()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L56",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "timer_fragment()",
+      "id": "app_main_timer_fragment"
+    },
+    {
+      "label": "start()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L70",
+      "_origin": "ast",
+      "community": 6,
+      "norm_label": "start()",
+      "id": "app_main_start"
+    },
+    {
+      "label": "stop()",
+      "file_type": "code",
+      "source_file": "app/main.py",
+      "source_location": "L85",
+      "_origin": "ast",
+      "community": 4,
+      "norm_label": "stop()",
+      "id": "app_main_stop"
+    },
+    {
+      "label": "FastAPI application for the Pomodoro timer.  Server-authoritative: the in-memory",
+      "file_type": "rationale",
+      "source_file": "app/main.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "fastapi application for the pomodoro timer.  server-authoritative: the in-memory",
+      "id": "app_main_rationale_1"
+    },
+    {
+      "label": "Full page with the polling container.",
+      "file_type": "rationale",
+      "source_file": "app/main.py",
+      "source_location": "L42",
+      "_origin": "ast",
+      "community": 5,
+      "norm_label": "full page with the polling container.",
+      "id": "app_main_rationale_42"
+    },
+    {
+      "label": "Polled every 1s. Returns the phase-specific fragment.",
+      "file_type": "rationale",
+      "source_file": "app/main.py",
+      "source_location": "L57",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "polled every 1s. returns the phase-specific fragment.",
+      "id": "app_main_rationale_57"
+    },
+    {
+      "label": "idle -> focus. Returns the focus fragment.",
+      "file_type": "rationale",
+      "source_file": "app/main.py",
+      "source_location": "L71",
+      "_origin": "ast",
+      "community": 6,
+      "norm_label": "idle -> focus. returns the focus fragment.",
+      "id": "app_main_rationale_71"
+    },
+    {
+      "label": "focus -> idle (abandon). Returns the idle fragment.",
+      "file_type": "rationale",
+      "source_file": "app/main.py",
+      "source_location": "L86",
+      "_origin": "ast",
+      "community": 4,
+      "norm_label": "focus -> idle (abandon). returns the idle fragment.",
+      "id": "app_main_rationale_86"
+    },
+    {
+      "label": "timer.py",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "timer.py",
+      "id": "app_timer"
+    },
+    {
+      "label": "Phase",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L17",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "phase",
+      "id": "app_timer_phase"
+    },
+    {
+      "label": "str",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "str",
+      "id": "str"
+    },
+    {
+      "label": "Enum",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "enum",
+      "id": "enum"
+    },
+    {
+      "label": "TimerState",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "timerstate",
+      "id": "app_timer_timerstate"
+    },
+    {
+      "label": "PomodoroTimer",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L42",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "pomodorotimer",
+      "id": "app_timer_pomodorotimer"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L52",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": ".__init__()",
+      "id": "app_timer_pomodorotimer_init"
+    },
+    {
+      "label": ".start_focus()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L60",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": ".start_focus()",
+      "id": "app_timer_pomodorotimer_start_focus"
+    },
+    {
+      "label": ".stop_focus()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L67",
+      "_origin": "ast",
+      "community": 7,
+      "norm_label": ".stop_focus()",
+      "id": "app_timer_pomodorotimer_stop_focus"
+    },
+    {
+      "label": ".tick()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L77",
+      "_origin": "ast",
+      "community": 3,
+      "norm_label": ".tick()",
+      "id": "app_timer_pomodorotimer_tick"
+    },
+    {
+      "label": ".get_state()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L104",
+      "_origin": "ast",
+      "community": 3,
+      "norm_label": ".get_state()",
+      "id": "app_timer_pomodorotimer_get_state"
+    },
+    {
+      "label": "._current_duration()",
+      "file_type": "code",
+      "source_file": "app/timer.py",
+      "source_location": "L135",
+      "_origin": "ast",
+      "community": 3,
+      "norm_label": "._current_duration()",
+      "id": "app_timer_pomodorotimer_current_duration"
+    },
+    {
+      "label": "Server-authoritative in-memory Pomodoro timer (purist stance, no persistence).",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "server-authoritative in-memory pomodoro timer (purist stance, no persistence).",
+      "id": "app_timer_rationale_1"
+    },
+    {
+      "label": "Snapshot of the timer returned by get_state().",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L33",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "snapshot of the timer returned by get_state().",
+      "id": "app_timer_rationale_33"
+    },
+    {
+      "label": "Single global, in-memory timer. No persistence, no pause.      State machine:",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L43",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "single global, in-memory timer. no persistence, no pause.      state machine:",
+      "id": "app_timer_rationale_43"
+    },
+    {
+      "label": "idle -> focus. Sets started_at; does NOT change completed_count.",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "idle -> focus. sets started_at; does not change completed_count.",
+      "id": "app_timer_rationale_61"
+    },
+    {
+      "label": "focus -> idle. Abandons the pomodoro; count NOT incremented.",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L68",
+      "_origin": "ast",
+      "community": 7,
+      "norm_label": "focus -> idle. abandons the pomodoro; count not incremented.",
+      "id": "app_timer_rationale_68"
+    },
+    {
+      "label": "Advance phase transitions based on elapsed time. Called on each read.",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L78",
+      "_origin": "ast",
+      "community": 3,
+      "norm_label": "advance phase transitions based on elapsed time. called on each read.",
+      "id": "app_timer_rationale_78"
+    },
+    {
+      "label": "Return a snapshot of the timer, computing remaining time on read.",
+      "file_type": "rationale",
+      "source_file": "app/timer.py",
+      "source_location": "L105",
+      "_origin": "ast",
+      "community": 3,
+      "norm_label": "return a snapshot of the timer, computing remaining time on read.",
+      "id": "app_timer_rationale_105"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_format_mmss"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_fragment_name"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_index"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_start"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_stop"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_main_timer_fragment"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_timer"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main",
+      "target": "app_timer_phase"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_rationale_1",
+      "target": "app_main"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_index",
+      "target": "app_main_format_mmss"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_start",
+      "target": "app_main_format_mmss"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_stop",
+      "target": "app_main_format_mmss"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_timer_fragment",
+      "target": "app_main_format_mmss"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_fragment_name",
+      "target": "phase"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_index",
+      "target": "app_main_fragment_name"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_start",
+      "target": "app_main_fragment_name"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_stop",
+      "target": "app_main_fragment_name"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_timer_fragment",
+      "target": "app_main_fragment_name"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "app/main.py",
+      "source_location": "L16",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "phase",
+      "target": "app_timer_phase"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_index",
+      "target": "htmlresponse"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_index",
+      "target": "request"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_rationale_42",
+      "target": "app_main_index"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_start",
+      "target": "request"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_stop",
+      "target": "request"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_timer_fragment",
+      "target": "request"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "app/main.py",
+      "source_location": "L16",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "request",
+      "target": "app_timer_phase"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_start",
+      "target": "htmlresponse"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_stop",
+      "target": "htmlresponse"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_timer_fragment",
+      "target": "htmlresponse"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "app/main.py",
+      "source_location": "L16",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "htmlresponse",
+      "target": "app_timer_phase"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_rationale_57",
+      "target": "app_main_timer_fragment"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_rationale_71",
+      "target": "app_main_start"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/main.py",
+      "source_location": "L86",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_main_rationale_86",
+      "target": "app_main_stop"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer",
+      "target": "app_timer_phase"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer",
+      "target": "app_timer_pomodorotimer"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer",
+      "target": "app_timer_timerstate"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer",
+      "target": "enum"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_1",
+      "target": "app_timer"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_phase",
+      "target": "enum"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_phase",
+      "target": "str"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L104",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer_get_state",
+      "target": "app_timer_timerstate"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_33",
+      "target": "app_timer_timerstate"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_current_duration"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L104",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_get_state"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_init"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_start_focus"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_stop_focus"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L77",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer",
+      "target": "app_timer_pomodorotimer_tick"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_43",
+      "target": "app_timer_pomodorotimer"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_61",
+      "target": "app_timer_pomodorotimer_start_focus"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_68",
+      "target": "app_timer_pomodorotimer_stop_focus"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer_get_state",
+      "target": "app_timer_pomodorotimer_tick"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer_tick",
+      "target": "app_timer_pomodorotimer_current_duration"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_78",
+      "target": "app_timer_pomodorotimer_tick"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L112",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_pomodorotimer_get_state",
+      "target": "app_timer_pomodorotimer_current_duration"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app/timer.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_timer_rationale_105",
+      "target": "app_timer_pomodorotimer_get_state"
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "898ce02e6207e28e659acba200e294ef33ae3d88"
+}

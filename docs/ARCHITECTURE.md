@@ -27,7 +27,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    IN["metrics.json + spec_text + codebase_modules"] --> S["Jev Call 1: Structure Scoring<br/>6 Score primitives (parallel), each Level 1-5 + confidence"]
+    IN["metrics.json + spec_text + codebase_modules"] --> S["Jev Call 1: Structure Scoring<br/>6 Score primitives (parallel), each a continuous 0-4 score + confidence"]
     S --> S1["Coupling"]
     S --> S2["Circular Dependencies"]
     S --> S3["Dependency Depth"]
@@ -35,7 +35,7 @@ flowchart TD
     S --> S5["Function Size"]
     S --> S6["Betweenness Centrality"]
 
-    IN --> P["Jev Call 2: Spec Scoring<br/>1 Choice + 5 Noul (parallel), each yes/no + confidence"]
+    IN --> P["Jev Call 2: Spec Scoring<br/>1 Choice + 5 Noul (parallel); Choice returns option+confidence, each Noul returns a single yes-probability"]
     P --> P0["Weakest Dimension (Choice)"]
     P --> P1["Clarity & Testability"]
     P --> P2["Scope Boundary"]
@@ -46,15 +46,18 @@ flowchart TD
     S1 & S2 & S3 & S4 & S5 & S6 & P0 & P1 & P2 & P3 & P4 & P5 --> OUT["scored_data.json<br/>(levels + thresholds + confidence)"]
 ```
 
-**Cost:** ~4 min-tokens total. Deterministic. Calibrated by TypeSafe.
+**Cost:** ~4 min-tokens total. Calibrated by TypeSafe.
 
-**Key trait:** Jev returns **confidence** on every answer → judges know which scores are ambiguous.
+**Key trait:** Jev returns a confidence measure on every answer → judges know which scores are
+ambiguous. Score answers are continuous (a probability-weighted average across levels, not a
+discrete pick); Noul answers are a single yes-probability, from which code derives an answer
+and confidence (see `docs/design/spec-scoring.md`).
 
 ### Phase 3: Report Generation (Deterministic + LLM Prose)
 
 ```mermaid
 flowchart TD
-    A["scored_data.json + metrics + config"] --> B["Code: Deterministic Arithmetic<br/>map Levels 1-5 and yes/no to Scores 0-10<br/>apply weights (config.yaml)<br/>compute structure_total, spec_total, combined_total<br/>check red flags"]
+    A["scored_data.json + metrics + config"] --> B["Code: Deterministic Arithmetic<br/>rescale Score's 0-4 continuous value and Noul's yes-probability to 0-10<br/>apply weights (config.yaml)<br/>compute structure_total, spec_total, combined_total<br/>check red flags"]
     B --> C["scored_data with 0-10 scores"]
     C --> D["LLM Call: Report Generation<br/>input: scored_data JSON (concise, structured)<br/>output: markdown prose (2-3 sentences per dimension + summary)"]
     D --> E["reports/team-X.md<br/>(scores + prose + confidence)"]
@@ -169,11 +172,13 @@ Note: `pyproject.toml` and a formula reference (`design/scoring-math.md`) are no
   "structure": {
     "scores": {
       "coupling": {
-        "score": 7.5,
-        "level": 4,
+        "score_0_10": 7.5,
+        "level": 3,
+        "level_label": "Good",
         "confidence": 0.78
       },
-      // ... (all 6 dimensions)
+      // ... (all 6 dimensions; "level"/"level_label" are derived by rounding
+      // Jev's continuous 0-4 score, not returned directly by the API)
     },
     "weighted_total": 7.8
   },
@@ -184,7 +189,8 @@ Note: `pyproject.toml` and a formula reference (`design/scoring-math.md`) are no
         "answer": "yes",
         "confidence": 0.72
       },
-      // ... (all 5 dimensions)
+      // ... (all 5 dimensions; "answer"/"confidence" are derived from Jev's
+      // single Noul probability, see docs/design/spec-scoring.md)
     },
     "weighted_total": 7.6,
     "weakest_dimension": {
@@ -206,8 +212,8 @@ Generated from scored_data + LLM prose. Example in `examples/sample-report.md`.
 ```yaml
 typesafe:
   api_key_env: "TYPESAFE_API_KEY"
-  api_endpoint: "https://api.typesafe.ai/v1"
-  model: "jev"
+  api_endpoint: "https://api.typesafe.ai"  # typesafe-sdk's default; only needed if self-hosting
+  model: "jev-latest"  # NOT "jev" - the real SDK rejects that as an unknown model
 
 report_generation:
   api_key_env: "ANTHROPIC_API_KEY"

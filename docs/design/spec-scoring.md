@@ -5,9 +5,25 @@ This document defines the **1 Choice** and **5 Noul** primitives used to judge S
 ## Overview
 
 - **Choice:** Identify the weakest SDD dimension (diagnostic, helps judges prioritize)
-- **Noul (×5):** Judge whether each dimension meets a threshold (yes/no with confidence)
+- **Noul (×5):** Judge whether each dimension meets a threshold
 
-Noul answers map to scores: yes → 8, no → 3, adjusted by confidence.
+In the real `typesafe-sdk` package, `Choice.criteria` is a `dict[str, str | None]`
+mapping option name → description (not a plain list), and `Noul.criteria` is an
+optional `{"true": ..., "false": ...}` dict.
+
+Jev's `ChoiceAnswer` returns `.choice` (the chosen option name), `.confidence`
+(0–1), and `.probabilities` (per-option likelihood) — matching what this doc
+originally assumed.
+
+Jev's `NoulAnswer` returns **only** `.noul`, a single float (0–1): the probability
+of "yes"/true. There is no separate confidence field — our code derives both an
+answer and a confidence from that one number:
+```
+answer = "yes" if noul >= 0.5 else "no"
+confidence = abs(noul - 0.5) * 2   # 0 at noul=0.5 (max uncertainty), 1 at noul=0 or 1
+```
+The yes/no → 0–10 score interpolation below (using this derived confidence) is
+unchanged from the original design.
 
 ## Input State
 
@@ -26,6 +42,14 @@ All questions receive the same state:
 }
 ```
 
+**Framework-agnostic by design:** `sdd.zip` is not assumed to follow any particular
+SDD tool's layout (e.g. OpenSpec's `openspec/specs/*/spec.md` +
+`openspec/changes/archive/*/` structure). The extractor just walks the archive,
+collects every text/markdown file it finds, and concatenates them with a filename
+header per file — Jev reads the raw text directly, so no framework-specific
+parsing is needed in code. This keeps the analyzer working the same way regardless
+of which SDD framework (OpenSpec, a plain `SPEC.md`, ADRs, etc.) a team used.
+
 ---
 
 ## Question 1: Weakest Dimension (Choice)
@@ -34,16 +58,20 @@ All questions receive the same state:
 
 **Type:** Choice (one answer from options)
 
-**Options:**
-1. Clarity & Testability
-2. Scope Boundary
-3. Internal Consistency
-4. Traceability
-5. Substance Over Polish
+**Criteria** (`dict[str, str]`, option name → short description):
+```python
+{
+    "Clarity & Testability": "Requirements are vague, aspirational, or unfalsifiable",
+    "Scope Boundary": "In-scope/out-of-scope is unclear",
+    "Internal Consistency": "Spec contradicts itself",
+    "Traceability": "Spec doesn't map to the actual codebase",
+    "Substance Over Polish": "More formatting than concrete content",
+}
+```
 
 **Instructions:** Identify which SDD dimension is weakest or most concerning in the spec.
 
-**Output:** Single option + confidence (0–1)
+**Output:** `.choice` (the selected key above) + `.confidence` (0–1) + `.probabilities` (per-option likelihood)
 
 **Use case:** Judges see which dimension to review first. Not a score itself.
 
@@ -63,9 +91,9 @@ All questions receive the same state:
 - **Yes:** "checkout must complete in <2 seconds", "password must be ≥8 chars"
 - **No:** "provide great experience", "system should be robust", "handle edge cases"
 
-**Output:** yes/no + confidence (0–1)
+**Output:** `.noul` (0–1 probability of "yes"); answer and confidence are derived (see Overview)
 
-**Score mapping:**
+**Score mapping** (derived answer/confidence → score):
 - yes (confidence ≥ 0.7) → score ~8.5
 - yes (confidence < 0.5) → score ~6.5
 - no (confidence ≥ 0.7) → score ~2.5
@@ -87,7 +115,7 @@ All questions receive the same state:
 - **Yes:** "MVP Goals: auth, profiles, checkout. Future: admin panel, analytics (out of scope)"
 - **No:** "We'll build auth and maybe analytics later" (unclear if analytics is MVP)
 
-**Output:** yes/no + confidence (0–1)
+**Output:** `.noul` (0–1 probability of "yes"); answer and confidence are derived (see Overview)
 
 ---
 
@@ -105,7 +133,7 @@ All questions receive the same state:
 - **Yes:** Data model defined once, referenced consistently. Requirements coherent.
 - **No:** "Field named 'email' in one section, 'email_address' in another with different type" + "users can delete posts" vs. "only admins delete"
 
-**Output:** yes/no + confidence (0–1)
+**Output:** `.noul` (0–1 probability of "yes"); answer and confidence are derived (see Overview)
 
 ---
 
@@ -123,7 +151,7 @@ All questions receive the same state:
 - **Yes:** Spec mentions "mail service" → codebase has `libs/mailer.js`. Spec describes "user profiles" → codebase has `models/user.js`. Most files matched.
 - **No:** Codebase has `models/payment.js`, `jobs/billing.js` but spec never mentions billing/payment. `utils/helpers.js` has no clear role in spec.
 
-**Output:** yes/no + confidence (0–1)
+**Output:** `.noul` (0–1 probability of "yes"); answer and confidence are derived (see Overview)
 
 **Note:** This is a plausibility check, not proof of correctness. We can't verify behavior, only naming/structure alignment.
 
@@ -143,7 +171,7 @@ All questions receive the same state:
 - **Yes:** "Plain-text spec with API contracts, data models, specific requirements"
 - **No:** "Glossy 20-page deck with pretty headers but 'we will build a great product' repeated 5 times"
 
-**Output:** yes/no + confidence (0–1)
+**Output:** `.noul` (0–1 probability of "yes"); answer and confidence are derived (see Overview)
 
 ---
 
@@ -181,48 +209,47 @@ Checked independently after Noul scoring:
 
 ## Implementation Example
 
+Real package: `typesafe-sdk` (`uv add typesafe-sdk`). Note `typesafe` on PyPI is an
+unrelated package — do not install it.
+
 ```python
-from typesafe import jev_client
+from typesafe_sdk import Choice, Noul, TypeSafeClient
 
-questions = [
-    {
-        "id": "weakest_sdd_dimension",
-        "type": "choice",
-        "instructions": "Identify which SDD dimension is weakest...",
-        "state": spec_state,
-        "options": [
-            "Clarity & Testability",
-            "Scope Boundary",
-            "Internal Consistency",
-            "Traceability",
-            "Substance Over Polish"
-        ]
-    },
-    {
-        "id": "clarity_testability_met",
-        "type": "noul",
-        "instructions": "Are requirements concrete and testable?",
-        "state": spec_state,
-        "criteria": {
-            "yes": "Requirements are specific and testable (>80%)",
-            "no": "Roughly half or more are vague, aspirational, unfalsifiable"
-        }
-    },
-    # ... (Noul 2–5, similar structure)
-]
+client = TypeSafeClient()  # reads TYPESAFE_API_KEY; model defaults to "jev-latest"
 
-response = jev_client.ask(model="jev", questions=questions)
+spec_state = {"spec_text": spec_text, "codebase_modules": codebase_modules}
 
-# Extract Choice
-weakest = response["weakest_sdd_dimension"]
-print(f"Weakest: {weakest.answer} ({weakest.confidence:.0%})")
+questions = {
+    "weakest_sdd_dimension": Choice(
+        instructions="Identify which SDD dimension is weakest or most concerning.",
+        criteria={
+            "Clarity & Testability": "Requirements are vague, aspirational, or unfalsifiable",
+            "Scope Boundary": "In-scope/out-of-scope is unclear",
+            "Internal Consistency": "Spec contradicts itself",
+            "Traceability": "Spec doesn't map to the actual codebase",
+            "Substance Over Polish": "More formatting than concrete content",
+        },
+    ),
+    "clarity_testability_met": Noul(
+        instructions="Are requirements concrete and testable throughout?"
+    ),
+    # ... (Noul 2-5, same shape)
+}
 
-# Extract Noulis
+response = client.system_one(spec_state, questions)
+
+# Choice
+weakest = response.choices["weakest_sdd_dimension"]
+print(f"Weakest: {weakest.choice} ({weakest.confidence:.0%})")
+
+# Nouls — derive answer + confidence from the single probability
 for dim in ["clarity_testability", "scope_boundary", "consistency", "traceability", "substance"]:
-    answer = response[f"{dim}_met"]
-    score = 8 if answer.answer == "yes" else 3
-    adjusted_score = score + (answer.confidence - 0.5) * 2  # ±2 based on confidence
-    print(f"{dim}: {answer.answer} ({answer.confidence:.0%}) → {adjusted_score:.1f}")
+    noul_value = response.nouls[f"{dim}_met"].noul
+    answer = "yes" if noul_value >= 0.5 else "no"
+    confidence = abs(noul_value - 0.5) * 2
+    score = 8 if answer == "yes" else 3
+    adjusted_score = score + (confidence - 0.5) * 2  # ±2 based on confidence
+    print(f"{dim}: {answer} ({confidence:.0%}) → {adjusted_score:.1f}")
 ```
 
 ---
