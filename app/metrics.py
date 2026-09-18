@@ -1,8 +1,13 @@
-"""Load a Graphify graph.json and collapse it to a file-level dependency graph."""
+"""Load a Graphify graph.json and collapse it to a file-level dependency graph,
+plus compute code-complexity metrics from a submission's source.zip via Lizard.
+"""
 
 import json
+import tempfile
+import zipfile
 from pathlib import Path
 
+import lizard
 import networkx as nx
 
 DEPENDENCY_RELATIONS = {
@@ -117,3 +122,70 @@ def compute_graph_metrics(g: nx.DiGraph) -> dict:
             {"node": n, "betweenness": b} for n, b in top_betweenness_nodes
         ],
     }
+
+
+CCN_THRESHOLD = 10
+
+EXCLUDED_DIR_NAMES = {"__pycache__", "node_modules", ".git", "static", "templates"}
+
+# Extensions Lizard can parse that we care about for hackathon submissions.
+CODE_EXTENSIONS = {
+    ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cs", ".go", ".rb",
+    ".c", ".cpp", ".cc", ".h", ".hpp", ".php", ".swift", ".kt", ".scala", ".m",
+}
+
+
+def extract_source(zip_path: str | Path, dest_dir: str | Path) -> Path:
+    """Extract a submission's source.zip into dest_dir."""
+    dest_dir = Path(dest_dir)
+    with zipfile.ZipFile(zip_path) as zf:
+        zf.extractall(dest_dir)
+    return dest_dir
+
+
+def _iter_code_files(root: Path):
+    for path in root.rglob("*"):
+        if not path.is_file() or path.suffix not in CODE_EXTENSIONS:
+            continue
+        if any(part in EXCLUDED_DIR_NAMES for part in path.parts):
+            continue
+        yield path
+
+
+def compute_complexity_metrics(source_dir: str | Path) -> dict:
+    """Compute the complexity_metrics fields defined in docs/design/structure-scoring.md."""
+    source_dir = Path(source_dir)
+    functions = []
+    for path in _iter_code_files(source_dir):
+        analysis = lizard.analyze_file(str(path))
+        rel_path = str(path.relative_to(source_dir))
+        for func in analysis.function_list:
+            functions.append(
+                {
+                    "name": func.name,
+                    "file": rel_path,
+                    "ccn": func.cyclomatic_complexity,
+                    "nloc": func.nloc,
+                    "params": len(func.full_parameters),
+                }
+            )
+
+    above_threshold = [f for f in functions if f["ccn"] > CCN_THRESHOLD]
+
+    return {
+        "total_functions": len(functions),
+        "avg_cyclomatic_complexity": _mean([f["ccn"] for f in functions]),
+        "max_cyclomatic_complexity": max((f["ccn"] for f in functions), default=0),
+        "functions_above_complexity_threshold": [
+            {"name": f["name"], "file": f["file"], "ccn": f["ccn"], "nloc": f["nloc"]}
+            for f in above_threshold
+        ],
+        "avg_function_length_nloc": _mean([f["nloc"] for f in functions]),
+        "avg_parameter_count": _mean([f["params"] for f in functions]),
+    }
+
+
+def compute_complexity_metrics_from_zip(zip_path: str | Path) -> dict:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        extract_source(zip_path, tmp_dir)
+        return compute_complexity_metrics(tmp_dir)

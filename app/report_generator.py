@@ -1,11 +1,11 @@
-"""Render graph metrics as a Rich terminal report."""
+"""Render graph + complexity metrics as a Rich terminal report."""
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 
-def compute_red_flags(metrics: dict) -> list[str]:
+def compute_graph_red_flags(metrics: dict) -> list[str]:
     flags = []
 
     for cycle in metrics["circular_dependencies"]:
@@ -27,9 +27,17 @@ def compute_red_flags(metrics: dict) -> list[str]:
     return flags
 
 
-def render_graph_report(console: Console, team_name: str, metrics: dict) -> None:
-    console.print(Panel(f"[bold]scorer_cli[/bold] — Graph Metrics Report: [cyan]{team_name}[/cyan]"))
+def compute_complexity_red_flags(metrics: dict) -> list[str]:
+    flags = []
+    for func in metrics["functions_above_complexity_threshold"]:
+        if func["ccn"] > 20:
+            flags.append(
+                f"Function `{func['name']}` in {func['file']} has CCN {func['ccn']} (> 20)"
+            )
+    return flags
 
+
+def render_graph_section(console: Console, metrics: dict) -> None:
     summary = Table(title="Graph Metrics", header_style="bold magenta")
     summary.add_column("Metric")
     summary.add_column("Value", justify="right")
@@ -52,7 +60,57 @@ def render_graph_report(console: Console, team_name: str, metrics: dict) -> None
         top.add_row(entry["node"], f"{entry['betweenness']:.4f}")
     console.print(top)
 
-    flags = compute_red_flags(metrics)
+
+def render_complexity_section(console: Console, metrics: dict) -> None:
+    summary = Table(title="Complexity Metrics", header_style="bold magenta")
+    summary.add_column("Metric")
+    summary.add_column("Value", justify="right")
+    summary.add_row("Total Functions", str(metrics["total_functions"]))
+    summary.add_row("Avg Cyclomatic Complexity", f"{metrics['avg_cyclomatic_complexity']:.2f}")
+    summary.add_row("Max Cyclomatic Complexity", str(metrics["max_cyclomatic_complexity"]))
+    summary.add_row("Avg Function Length (NLOC)", f"{metrics['avg_function_length_nloc']:.1f}")
+    summary.add_row("Avg Parameter Count", f"{metrics['avg_parameter_count']:.1f}")
+    summary.add_row(
+        "Functions Above CCN Threshold (10)",
+        str(len(metrics["functions_above_complexity_threshold"])),
+    )
+    console.print(summary)
+
+    above = metrics["functions_above_complexity_threshold"]
+    if above:
+        worst = Table(title="Most Complex Functions", header_style="bold magenta")
+        worst.add_column("Function")
+        worst.add_column("File")
+        worst.add_column("CCN", justify="right")
+        worst.add_column("NLOC", justify="right")
+        for func in sorted(above, key=lambda f: -f["ccn"])[:5]:
+            worst.add_row(func["name"], func["file"], str(func["ccn"]), str(func["nloc"]))
+        console.print(worst)
+
+
+def render_report(
+    console: Console,
+    team_name: str,
+    graph_metrics: dict,
+    complexity_metrics: dict | None = None,
+) -> None:
+    console.print(Panel(f"[bold]scorer_cli[/bold] — Structure Report: [cyan]{team_name}[/cyan]"))
+
+    render_graph_section(console, graph_metrics)
+    flags = compute_graph_red_flags(graph_metrics)
+
+    if complexity_metrics is not None:
+        render_complexity_section(console, complexity_metrics)
+        flags += compute_complexity_red_flags(complexity_metrics)
+    else:
+        console.print(
+            Panel(
+                "No source.zip found — complexity metrics skipped.",
+                title="Complexity Metrics",
+                border_style="yellow",
+            )
+        )
+
     if flags:
         body = "\n".join(f"[red]⚠[/red]  {f}" for f in flags)
         console.print(Panel(body, title="Red Flags", border_style="red"))
