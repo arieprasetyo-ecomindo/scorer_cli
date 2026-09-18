@@ -1,0 +1,216 @@
+================================================================================
+SCORER_CLI — DEVELOPMENT-READY STRUCTURE
+================================================================================
+
+DIRECTORY LAYOUT:
+
+scorer_cli/
+│
+├── README.md                          ← START HERE (overview, 5-min setup)
+├── INDEX.md                           ← Navigation guide (you are here)
+├── STRUCTURE.txt                      ← This file
+├── pyproject.toml                     ← Python dependencies
+├── config.yaml.example                ← Configuration template
+│
+├── docs/                              ← USER DOCUMENTATION
+│   ├── ARCHITECTURE.md                  System design & 3-phase pipeline
+│   ├── QUICKSTART.md                    5-minute first-time user guide
+│   ├── API.md                           TypeSafe & Anthropic API setup
+│   └── FAQ.md                           Troubleshooting & common questions
+│
+├── design/                            ← IMPLEMENTATION DESIGN (for devs)
+│   ├── structure-scoring.md             6 Score primitives (code quality)
+│   ├── spec-scoring.md                  Choice + 5 Noul (SDD quality)
+│   ├── report-generation.md             LLM prompt & fallback logic
+│   └── scoring-math.md                  Formulas, weights, thresholds
+│
+├── spec/                              ← REFERENCE DOCUMENTATION
+│   └── rubrics.md                       Complete scoring rubric (11 dims)
+│
+├── examples/                          ← SAMPLE OUTPUT
+│   └── sample-report.md                 Example report for judges
+│
+├── score_cli/                         ← APPLICATION SOURCE CODE
+│   ├── __main__.py                      CLI entry point
+│   ├── scorer.py                        Main orchestration
+│   ├── metrics.py                       Metrics collection (metrics.json)
+│   ├── jev_scorer.py                    Jev API calls (judgment)
+│   ├── scoring_engine.py                Score mapping & arithmetic
+│   ├── llm_reporter.py                  Claude API calls (prose)
+│   └── report_generator.py              Report formatting & file I/O
+│
+└── _archive/                          ← OLD/DEPRECATED DOCS
+    ├── IMPLEMENTATION_GUIDE.md          (still useful for step-by-step)
+    ├── JEV_MIGRATION_SUMMARY.md
+    ├── PIPELINE_OVERVIEW.md
+    └── [other legacy files]
+
+================================================================================
+DOCUMENT PURPOSES
+================================================================================
+
+USER DOCS (docs/):
+  • README.md
+    - What is scorer_cli? Why use it? How to install?
+    - First-time setup in 5 minutes
+    - Points to QUICKSTART for deeper guide
+  
+  • QUICKSTART.md
+    - Step-by-step: install → configure → run → understand output
+    - Expected output format
+    - Common tasks & troubleshooting
+  
+  • ARCHITECTURE.md
+    - 3-phase pipeline: metrics → Jev scoring → LLM report generation
+    - Key design philosophy: separation of concerns
+    - Configuration guide
+    - Data structures & flow diagrams
+    - CLI interface
+  
+  • API.md
+    - TypeSafe (Jev) API setup
+    - Anthropic (Claude) API setup
+    - Environment variables
+  
+  • FAQ.md
+    - Troubleshooting common issues
+    - Performance tuning
+    - Cost optimization
+
+DESIGN DOCS (design/):
+  Detailed implementation specifications. For developers building the modules.
+  
+  • structure-scoring.md
+    - 6 Score primitives (Coupling, Cycles, Depth, CCN, Size, Betweenness)
+    - Input state specification
+    - Criteria for each level (1–5)
+    - Red flags & calibration
+  
+  • spec-scoring.md
+    - 1 Choice + 5 Noul primitives (SDD quality)
+    - Input state: spec_text + codebase_modules
+    - Yes/no criteria for each dimension
+    - Score mapping (yes/no → 0–10)
+  
+  • report-generation.md
+    - LLM prompt design
+    - Fallback strategy (if Claude fails)
+    - Markdown validation
+    - Output format expectations
+  
+  • scoring-math.md
+    - All formulas (weights, thresholds, score mapping)
+    - Red flag rules
+    - Confidence interpretation
+
+REFERENCE (spec/):
+  • rubrics.md
+    - Complete scoring rubric (11 dimensions)
+    - Level definitions & examples
+    - Red flag rules
+    - For judges & developers
+
+EXAMPLES (examples/):
+  • sample-report.md
+    - Full example report showing all sections
+    - What judges see
+    - Score format with confidence levels
+
+================================================================================
+WHAT GOT REMOVED / CONSOLIDATED
+================================================================================
+
+✗ REMOVED (Content merged into other docs):
+  • code-structure-jev-questions.md → design/structure-scoring.md
+  • spec-jev-questions.md → design/spec-scoring.md
+  • code-structure-scoring-instructions.md → archived
+  • spec-scoring-instructions.md → archived
+  • scoring-guide.md → spec/rubrics.md
+  • SAMPLE_REPORT.md → examples/sample-report.md
+
+✗ ARCHIVED (Still useful, but consolidated):
+  • IMPLEMENTATION_GUIDE.md (moved to _archive/)
+  • PIPELINE_OVERVIEW.md (content → docs/ARCHITECTURE.md)
+  • JEV_MIGRATION_SUMMARY.md (content → docs/ARCHITECTURE.md)
+  • 001-mvp.md, 002-jev-redesign.md (historical)
+
+✓ RESULT: No redundancy, each doc has one clear purpose
+
+================================================================================
+HOW TO USE THIS STRUCTURE
+================================================================================
+
+For Users:
+  1. Read README.md (2 min)
+  2. Read docs/QUICKSTART.md (5 min)
+  3. Run: uv run score-cli run-all
+  4. Read examples/sample-report.md to understand output
+
+For Judges:
+  1. Read examples/sample-report.md (what's in a report?)
+  2. Read spec/rubrics.md (what do scores mean?)
+  3. Use confidence levels to prioritize manual review
+
+For Developers (Implementing):
+  1. Read docs/ARCHITECTURE.md (30 min)
+  2. Read spec/rubrics.md (20 min)
+  3. Read design/structure-scoring.md (20 min)
+  4. Read design/spec-scoring.md (20 min)
+  5. Read _archive/IMPLEMENTATION_GUIDE.md for step-by-step
+  6. Start coding the 7 modules in score_cli/
+
+For Architects/Leads:
+  1. Read README.md
+  2. Read docs/ARCHITECTURE.md (full design)
+  3. Review design/*.md for implementation details
+  4. Adjust config.yaml weights/thresholds as needed
+
+================================================================================
+NAVIGATION SHORTCUTS
+================================================================================
+
+"How do I...?"
+  • ...install scorer_cli?
+    → README.md or docs/QUICKSTART.md
+  
+  • ...score submissions?
+    → docs/QUICKSTART.md or docs/ARCHITECTURE.md CLI section
+  
+  • ...understand a report score?
+    → spec/rubrics.md
+  
+  • ...see an example report?
+    → examples/sample-report.md
+  
+  • ...set up my API keys?
+    → docs/API.md
+  
+  • ...implement structure scoring?
+    → design/structure-scoring.md + _archive/IMPLEMENTATION_GUIDE.md
+  
+  • ...implement spec scoring?
+    → design/spec-scoring.md + _archive/IMPLEMENTATION_GUIDE.md
+  
+  • ...implement report generation?
+    → design/report-generation.md + _archive/IMPLEMENTATION_GUIDE.md
+  
+  • ...troubleshoot an error?
+    → docs/FAQ.md or docs/QUICKSTART.md troubleshooting section
+  
+  • ...optimize costs?
+    → docs/ARCHITECTURE.md (cost section) or docs/FAQ.md
+
+================================================================================
+KEY POINTS
+================================================================================
+
+✓ ORGANIZED: Docs by audience (user/design/reference), not by topic
+✓ NO REDUNDANCY: Each fact documented once, linked from relevant places
+✓ DEVELOPMENT-READY: Design docs have enough detail to implement from
+✓ ACCESSIBLE: README.md and INDEX.md guide first-time users
+✓ SEARCHABLE: Table of contents + index for easy navigation
+✓ MAINTAINABLE: Clear purposes mean easy to update one document
+
+Status: READY FOR HANDOFF TO DEVELOPER
+
+================================================================================
