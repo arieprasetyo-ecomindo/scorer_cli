@@ -9,6 +9,9 @@ Quick navigation for all documentation. (All paths below are relative to `docs/`
 
 ## For Different Audiences
 
+### Hackathon Participants
+- [HOW_IT_WORKS.md](HOW_IT_WORKS.md) — Simplified diagram of the scoring pipeline
+
 ### Judges (Reading Reports)
 - [examples/sample-report.md](examples/sample-report.md) — Example report output
 - [spec/rubrics.md](spec/rubrics.md) — Understanding the scoring dimensions
@@ -39,11 +42,11 @@ scorer_cli/
 │
 ├── docs/
 │   ├── INDEX.md (this file)            ← Navigation
+│   ├── HOW_IT_WORKS.md                 ← Simplified pipeline diagram (for participants)
 │   ├── ARCHITECTURE.md                 ← System design (detailed)
 │   ├── QUICKSTART.md                   ← First-time user (5 min)
 │   ├── HANDOFF.md                      ← Project handoff summary
 │   ├── DEVELOPER_CHECKLIST.md          ← Implementation guide
-│   ├── STRUCTURE.txt                   ← Folder structure explained
 │   │
 │   ├── design/                         ← Implementation details (for devs)
 │   │   ├── structure-scoring.md        ← 6 Code quality dimensions

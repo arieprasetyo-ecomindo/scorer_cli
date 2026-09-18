@@ -242,7 +242,6 @@ uv run pytest tests/ -v
 
 ## Phase 4: Documentation & Handoff (1 hour)
 
-- [ ] Update STRUCTURE.txt if folder layout changed
 - [ ] Update this checklist if the implementation process changed
 - [ ] Verify all docs in `docs/`, `docs/design/`, `docs/spec/` are accurate
 - [ ] Test docs: can someone use them to understand your code?

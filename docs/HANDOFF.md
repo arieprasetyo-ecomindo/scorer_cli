@@ -32,7 +32,6 @@ This document summarizes what's been completed and what's ready for the next dev
 **Navigation:**
 - ✅ README.md — Entry point (repo root)
 - ✅ INDEX.md — Documentation map with quick links
-- ✅ STRUCTURE.txt — Folder structure explained
 - ✅ DEVELOPER_CHECKLIST.md — Implementation guide (9–12 hours)
 
 ### Configuration
@@ -50,7 +49,7 @@ scorer_cli/
 │   ├── design/         (implementation specifications)
 │   ├── spec/           (reference: rubrics)
 │   ├── examples/       (sample output)
-│   └── [guidance docs] (INDEX, STRUCTURE, DEVELOPER_CHECKLIST, HANDOFF, ARCHITECTURE, QUICKSTART)
+│   └── [guidance docs] (INDEX, DEVELOPER_CHECKLIST, HANDOFF, ARCHITECTURE, QUICKSTART)
 └── app/                (empty, ready for code)
 ```
 

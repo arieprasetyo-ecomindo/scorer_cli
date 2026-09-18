@@ -42,6 +42,7 @@ All documentation lives in [`docs/`](docs/) — see [docs/INDEX.md](docs/INDEX.m
 
 | Document | For | Purpose |
 |----------|-----|---------|
+| **docs/HOW_IT_WORKS.md** | Hackathon participants | Simplified diagram + plain-language explanation |
 | **docs/QUICKSTART.md** | Users, judges | Get started in 5 minutes |
 | **docs/ARCHITECTURE.md** | Architects, leads | System design, 3-phase pipeline, data structures |
 | **docs/DEVELOPER_CHECKLIST.md** | Developers | Step-by-step implementation guide |
@@ -61,11 +62,11 @@ scorer_cli/
 │
 ├── docs/                        # All documentation
 │   ├── INDEX.md                 # Navigation guide
+│   ├── HOW_IT_WORKS.md          # Simplified pipeline diagram (for participants)
 │   ├── ARCHITECTURE.md          # System design, 3-phase pipeline
 │   ├── QUICKSTART.md            # 5-minute first-time user guide
 │   ├── HANDOFF.md               # Project handoff summary
 │   ├── DEVELOPER_CHECKLIST.md   # Implementation guide
-│   ├── STRUCTURE.txt            # Folder structure explained
 │   │
 │   ├── design/                  # Implementation design (for devs)
 │   │   ├── structure-scoring.md

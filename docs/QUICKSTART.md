@@ -58,17 +58,19 @@ Reports are markdown files in `reports/`:
 
 ## Structure Quality (Code Metrics)
 
-### Coupling — Weight 21%
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 78% |
-| **Justification** | [2–3 sentences from Claude] |
+| Dimension | Weight | Score | Jev Level | Confidence |
+|---|---|---|---|---|
+| Coupling | 21% | 7.5 / 10 | 4 (Good) | 78% |
+| [5 more structure dimensions...] | | | | |
 
-### [5 more structure dimensions...]
+#### Coupling
+[2–3 sentences from Claude]
 
 ## Spec Quality (SDD Scoring)
 
-### [5 spec dimensions...]
+| Dimension | Weight | Score | Jev Answer | Confidence |
+|---|---|---|---|---|
+| [5 spec dimensions...] | | | | |
 
 ## Red Flags
 - Function X has CCN > 20

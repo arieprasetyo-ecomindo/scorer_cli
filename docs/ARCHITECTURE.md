@@ -13,18 +13,10 @@
 
 ### Phase 1: Metrics Collection (Local)
 
-```
-submissions/team-X/
-├── graph.json (dependency graph from Graphify)
-├── source.zip (source code)
-└── sdd.zip (spec documents)
-         ↓
-   [NetworkX + Lizard]
-     • Collapse graph to file-level
-     • Compute: coupling, cycles, depth, modularity, betweenness
-     • Extract: CCN, function length, parameter count
-         ↓
-    metrics.json (deterministic, reproducible)
+```mermaid
+flowchart TD
+    A["submissions/team-X/<br/>graph.json · source.zip · sdd.zip"] --> B["NetworkX + Lizard<br/>collapse graph to file-level<br/>compute coupling, cycles, depth, modularity, betweenness<br/>extract CCN, function length, parameter count"]
+    B --> C["metrics.json<br/>(deterministic, reproducible)"]
 ```
 
 **Cost:** Zero API calls. All local.
@@ -33,28 +25,25 @@ submissions/team-X/
 
 ### Phase 2: Jev Scoring (Structured Judgment)
 
-```
-metrics.json + spec_text + codebase_modules
-         ↓
-   [Jev Call 1: Structure Scoring]
-   6 Score primitives (parallel):
-     • Coupling → Level 1–5 + confidence
-     • Circular Dependencies → Level 1–5 + confidence
-     • Dependency Depth → Level 1–5 + confidence
-     • Cyclomatic Complexity → Level 1–5 + confidence
-     • Function Size → Level 1–5 + confidence
-     • Betweenness Centrality → Level 1–5 + confidence
-         ↓
-   [Jev Call 2: Spec Scoring]
-   1 Choice + 5 Noul (parallel):
-     • Weakest Dimension → Choice answer + confidence
-     • Clarity & Testability → yes/no + confidence
-     • Scope Boundary → yes/no + confidence
-     • Internal Consistency → yes/no + confidence
-     • Traceability → yes/no + confidence
-     • Substance Over Polish → yes/no + confidence
-         ↓
-    scored_data.json (levels + thresholds + confidence)
+```mermaid
+flowchart TD
+    IN["metrics.json + spec_text + codebase_modules"] --> S["Jev Call 1: Structure Scoring<br/>6 Score primitives (parallel), each Level 1-5 + confidence"]
+    S --> S1["Coupling"]
+    S --> S2["Circular Dependencies"]
+    S --> S3["Dependency Depth"]
+    S --> S4["Cyclomatic Complexity"]
+    S --> S5["Function Size"]
+    S --> S6["Betweenness Centrality"]
+
+    IN --> P["Jev Call 2: Spec Scoring<br/>1 Choice + 5 Noul (parallel), each yes/no + confidence"]
+    P --> P0["Weakest Dimension (Choice)"]
+    P --> P1["Clarity & Testability"]
+    P --> P2["Scope Boundary"]
+    P --> P3["Internal Consistency"]
+    P --> P4["Traceability"]
+    P --> P5["Substance Over Polish"]
+
+    S1 & S2 & S3 & S4 & S5 & S6 & P0 & P1 & P2 & P3 & P4 & P5 --> OUT["scored_data.json<br/>(levels + thresholds + confidence)"]
 ```
 
 **Cost:** ~4 min-tokens total. Deterministic. Calibrated by TypeSafe.
@@ -63,23 +52,12 @@ metrics.json + spec_text + codebase_modules
 
 ### Phase 3: Report Generation (Deterministic + LLM Prose)
 
-```
-scored_data.json + metrics + config
-         ↓
-   [Code: Deterministic Arithmetic]
-     • Map Levels 1–5 → Scores 0–10
-     • Map yes/no → Scores 0–10
-     • Apply weights (config.yaml)
-     • Compute structure_total, spec_total, combined_total
-     • Check red flags
-         ↓
-    scored_data with 0–10 scores
-         ↓
-   [LLM Call: Report Generation]
-   Input: scored_data JSON (concise, structured)
-   Output: Markdown prose (2–3 sentences per dimension + summary)
-         ↓
-    reports/team-X.md (final output with scores + prose + confidence)
+```mermaid
+flowchart TD
+    A["scored_data.json + metrics + config"] --> B["Code: Deterministic Arithmetic<br/>map Levels 1-5 and yes/no to Scores 0-10<br/>apply weights (config.yaml)<br/>compute structure_total, spec_total, combined_total<br/>check red flags"]
+    B --> C["scored_data with 0-10 scores"]
+    C --> D["LLM Call: Report Generation<br/>input: scored_data JSON (concise, structured)<br/>output: markdown prose (2-3 sentences per dimension + summary)"]
+    D --> E["reports/team-X.md<br/>(scores + prose + confidence)"]
 ```
 
 **Cost:** ~2–3 min-tokens. LLM only writes prose, doesn't judge.
@@ -123,11 +101,11 @@ scorer_cli/                    # project directory
 │
 ├── docs/                      # All documentation
 │   ├── INDEX.md                # Navigation guide
+│   ├── HOW_IT_WORKS.md         # Simplified pipeline diagram (for participants)
 │   ├── ARCHITECTURE.md         # This file
 │   ├── QUICKSTART.md           # Get started (5 min)
 │   ├── HANDOFF.md              # Project handoff summary
 │   ├── DEVELOPER_CHECKLIST.md  # Implementation guide
-│   ├── STRUCTURE.txt           # Folder structure explained
 │   │
 │   ├── design/                 # Implementation design (for devs)
 │   │   ├── structure-scoring.md   # 6 Score primitives (detail)

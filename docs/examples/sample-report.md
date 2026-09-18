@@ -9,59 +9,32 @@
 
 Scores derived from dependency graph (via NetworkX) and complexity metrics (via Lizard), judged using Jev **Score** primitives.
 
-### Coupling — Weight 21%
+| Dimension | Weight | Score | Jev Level | Confidence |
+|---|---|---|---|---|
+| Coupling | 21% | 7.5 / 10 | 4 (Good) | 78% |
+| Circular Dependencies | 17% | 10 / 10 | 5 (Excellent) | 95% |
+| Dependency Depth | 13% | 7.5 / 10 | 4 (Good) | 71% |
+| Cyclomatic Complexity | 21% | 6.5 / 10 | 3 (Fair) | 64% |
+| Function Size Discipline | 13% | 7.5 / 10 | 4 (Good) | 82% |
+| Betweenness Centrality | 15% | 8.5 / 10 | 4 (Good) | 89% |
 
-| | |
-|--|--|
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 78% |
-| **Justification** | Jev rated coupling as Level 4 (Good) with 78% confidence. Graph analysis shows avg fan-in 1.6, max fan-in 7 (~4.4× average). One hotspot module (`libs/mailer.js`) with 7 dependents, but plausibly a shared utility. No obvious god-modules or tangled dependencies. Isolation is good for a 3-hour hackathon project. |
+#### Coupling
+Jev rated coupling as Level 4 (Good) with 78% confidence. Graph analysis shows avg fan-in 1.6, max fan-in 7 (~4.4× average). One hotspot module (`libs/mailer.js`) with 7 dependents, but plausibly a shared utility. No obvious god-modules or tangled dependencies. Isolation is good for a 3-hour hackathon project.
 
-### Circular Dependencies — Weight 17%
+#### Circular Dependencies
+Jev rated circular dependencies as Level 5 (Excellent) with 95% confidence. Graph analysis found zero cycles. Strong architectural discipline.
 
-| | |
-|--|--|
-| **Score** | 10 / 10 |
-| **Jev Level** | 5 (Excellent) |
-| **Confidence** | 95% |
-| **Justification** | Jev rated circular dependencies as Level 5 (Excellent) with 95% confidence. Graph analysis found zero cycles. Strong architectural discipline. |
+#### Dependency Depth
+Jev rated dependency depth as Level 4 (Good) with 71% confidence. Longest dependency path is 5 nodes; project has 87 nodes, so baseline is ~log(87)×2 = ~8.5 nodes. Path length of 5 is below baseline, indicating reasonable layering. Clear separation between entry point, logic, and data layers.
 
-### Dependency Depth — Weight 13%
+#### Cyclomatic Complexity
+Jev rated cyclomatic complexity as Level 3 (Fair) with 64% confidence. Average CCN is 4.2 (good), but max CCN is 23 in `processOrder()`. One function (`checkout.js:processOrder`, CCN 23, 88 NLOC) stands out as overly complex. About 8 functions exceed threshold (CCN > 10), which is ~5% of 154 total — at the boundary of acceptable. Under time pressure typical of hackathons, this is understandable, but worth refactoring post-launch.
 
-| | |
-|--|--|
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 71% |
-| **Justification** | Jev rated dependency depth as Level 4 (Good) with 71% confidence. Longest dependency path is 5 nodes; project has 87 nodes, so baseline is ~log(87)×2 = ~8.5 nodes. Path length of 5 is below baseline, indicating reasonable layering. Clear separation between entry point, logic, and data layers. |
+#### Function Size Discipline
+Jev rated function size as Level 4 (Good) with 82% confidence. Average function length is 18.3 NLOC (excellent, ≤ 20), and average parameter count is 2.1 (excellent, ≤ 3). One outlier (`processOrder` at 88 NLOC) inflates the median but doesn't dominate. Overall discipline is strong.
 
-### Cyclomatic Complexity — Weight 21%
-
-| | |
-|--|--|
-| **Score** | 6.5 / 10 |
-| **Jev Level** | 3 (Fair) |
-| **Confidence** | 64% |
-| **Justification** | Jev rated cyclomatic complexity as Level 3 (Fair) with 64% confidence. Average CCN is 4.2 (good), but max CCN is 23 in `processOrder()`. One function (`checkout.js:processOrder`, CCN 23, 88 NLOC) stands out as overly complex. About 8 functions exceed threshold (CCN > 10), which is ~5% of 154 total — at the boundary of acceptable. Under time pressure typical of hackathons, this is understandable, but worth refactoring post-launch. |
-
-### Function Size Discipline — Weight 13%
-
-| | |
-|--|--|
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 82% |
-| **Justification** | Jev rated function size as Level 4 (Good) with 82% confidence. Average function length is 18.3 NLOC (excellent, ≤ 20), and average parameter count is 2.1 (excellent, ≤ 3). One outlier (`processOrder` at 88 NLOC) inflates the median but doesn't dominate. Overall discipline is strong. |
-
-### Betweenness Centrality — Weight 15%
-
-| | |
-|--|--|
-| **Score** | 8.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 89% |
-| **Justification** | Jev rated betweenness as Level 4 (Good) with 89% confidence. Max betweenness is 0.38, average is 0.04 — a ratio of 9.5×. Top nodes are `libs/mailer.js` (0.38) and `server.js` (0.29). Both are legitimate architectural roles: `server.js` is an entry point, `libs/mailer.js` is a shared utility. No unexpected bottlenecks detected. |
+#### Betweenness Centrality
+Jev rated betweenness as Level 4 (Good) with 89% confidence. Max betweenness is 0.38, average is 0.04 — a ratio of 9.5×. Top nodes are `libs/mailer.js` (0.38) and `server.js` (0.29). Both are legitimate architectural roles: `server.js` is an entry point, `libs/mailer.js` is a shared utility. No unexpected bottlenecks detected.
 
 ### **Structure Weighted Total: 7.8 / 10**
 
@@ -87,50 +60,28 @@ The model suggests traceability as the weakest dimension, though with moderate c
 
 ---
 
-### Clarity & Testability — Weight 25%
+| Dimension | Weight | Score | Jev Answer | Confidence |
+|---|---|---|---|---|
+| Clarity & Testability | 25% | 8.0 / 10 | Yes (threshold met) | 72% |
+| Scope Boundary | 15% | 7.0 / 10 | Yes (threshold met) | 61% |
+| Internal Consistency | 15% | 8.5 / 10 | Yes (no significant contradictions) | 79% |
+| Traceability | 25% | 6.5 / 10 | No (weak overlap) | 55% |
+| Substance Over Polish | 20% | 8.0 / 10 | Yes (substantive content) | 75% |
 
-| | |
-|--|--|
-| **Score** | 8.0 / 10 |
-| **Jev Answer** | Yes (threshold met) |
-| **Confidence** | 72% |
-| **Justification** | Jev answered "Yes" (requirements are concrete and testable) with 72% confidence. Spec includes concrete API contracts: "POST /auth returns 401 if credentials invalid", "user profile includes first_name, last_name, email (required)", "checkout must complete within 5 seconds." About 85% of stated requirements are testable. A few aspirational statements ("provide a great experience") bring down the score slightly, but overall strong clarity. |
+#### Clarity & Testability
+Jev answered "Yes" (requirements are concrete and testable) with 72% confidence. Spec includes concrete API contracts: "POST /auth returns 401 if credentials invalid", "user profile includes first_name, last_name, email (required)", "checkout must complete within 5 seconds." About 85% of stated requirements are testable. A few aspirational statements ("provide a great experience") bring down the score slightly, but overall strong clarity.
 
-### Scope Boundary — Weight 15%
+#### Scope Boundary
+Jev answered "Yes" (scope is clearly bounded) with 61% confidence. Spec includes a "MVP Goals" section listing: auth, user profiles, checkout flow. A "Future" section lists admin dashboard and analytics, which are explicitly out of scope. Scope is inferable, though not in a single sentence — requires reading across sections. Clear enough for a hackathon.
 
-| | |
-|--|--|
-| **Score** | 7.0 / 10 |
-| **Jev Answer** | Yes (threshold met) |
-| **Confidence** | 61% |
-| **Justification** | Jev answered "Yes" (scope is clearly bounded) with 61% confidence. Spec includes a "MVP Goals" section listing: auth, user profiles, checkout flow. A "Future" section lists admin dashboard and analytics, which are explicitly out of scope. Scope is inferable, though not in a single sentence — requires reading across sections. Clear enough for a hackathon. |
+#### Internal Consistency
+Jev answered "Yes" (spec is internally consistent) with 79% confidence. Data model is described once and referenced consistently. Requirements for auth, profiles, and checkout are aligned. One minor inconsistency: checkout flow is described as "synchronous" in one section but "may be async in the future" in another — resolved by the spec author's note that future async is explicitly out of scope. No core contradictions.
 
-### Internal Consistency — Weight 15%
+#### Traceability
+Jev answered "No" (spec-to-codebase mapping is weak) with 55% confidence. Codebase has 8 main modules: server.js, auth/, checkout/, user/, models/, libs/mailer.js, libs/db.js, utils/. Spec mentions: "auth service", "user profiles", "checkout flow", "database", "email notifications". Direct matches: auth/ (✓), user/ (✓), checkout/ (✓), libs/db.js (✓), libs/mailer.js (✓). Orphaned/unclear: models/, utils/, server.js is not explicitly named in spec. About 5/8 modules are clearly mapped (62%). Would benefit from architecture diagram.
 
-| | |
-|--|--|
-| **Score** | 8.5 / 10 |
-| **Jev Answer** | Yes (no significant contradictions) |
-| **Confidence** | 79% |
-| **Justification** | Jev answered "Yes" (spec is internally consistent) with 79% confidence. Data model is described once and referenced consistently. Requirements for auth, profiles, and checkout are aligned. One minor inconsistency: checkout flow is described as "synchronous" in one section but "may be async in the future" in another — resolved by the spec author's note that future async is explicitly out of scope. No core contradictions. |
-
-### Traceability — Weight 25%
-
-| | |
-|--|--|
-| **Score** | 6.5 / 10 |
-| **Jev Answer** | No (weak overlap) |
-| **Confidence** | 55% |
-| **Justification** | Jev answered "No" (spec-to-codebase mapping is weak) with 55% confidence. Codebase has 8 main modules: server.js, auth/, checkout/, user/, models/, libs/mailer.js, libs/db.js, utils/. Spec mentions: "auth service", "user profiles", "checkout flow", "database", "email notifications". Direct matches: auth/ (✓), user/ (✓), checkout/ (✓), libs/db.js (✓), libs/mailer.js (✓). Orphaned/unclear: models/, utils/, server.js is not explicitly named in spec. About 5/8 modules are clearly mapped (62%). Would benefit from architecture diagram. |
-
-### Substance Over Polish — Weight 20%
-
-| | |
-|--|--|
-| **Score** | 8.0 / 10 |
-| **Jev Answer** | Yes (substantive content) |
-| **Confidence** | 75% |
-| **Justification** | Jev answered "Yes" (content is substantive) with 75% confidence. Spec is plainly formatted (no fancy graphics), but densely packed with concrete requirements, data models, and API contracts. ~75% of word count is specific detail (not filler). One section on "user experience principles" is slightly fluffy but represents ~5% of total. Overall, substance outweighs presentation. |
+#### Substance Over Polish
+Jev answered "Yes" (content is substantive) with 75% confidence. Spec is plainly formatted (no fancy graphics), but densely packed with concrete requirements, data models, and API contracts. ~75% of word count is specific detail (not filler). One section on "user experience principles" is slightly fluffy but represents ~5% of total. Overall, substance outweighs presentation.
 
 ### **Spec Weighted Total: 7.6 / 10**
 

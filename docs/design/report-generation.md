@@ -53,36 +53,38 @@ METRICS SNAPSHOT:
 {json.dumps(metrics_snapshot, indent=2)}
 
 TASK:
-1. For each structure dimension (6 total):
+1. Build one summary table for structure (6 rows) and one for spec (5 rows):
+   columns are Dimension | Weight | Score | Jev Level (or Jev Answer) | Confidence.
+
+2. For each structure dimension (6 total), under a #### header:
    - Write 2–3 sentences explaining the Jev level and score
    - Reference specific metrics (coupling ratio, CCN values, etc.)
    - Cite confidence level
    - End with actionable feedback for judges
 
-2. For each spec dimension (5 total):
+3. For each spec dimension (5 total), under a #### header:
    - Write 2–3 sentences
    - State whether threshold was met (yes/no)
    - Explain what it means for judges
    - Cite confidence
 
-3. Summary (3–4 sentences):
+4. Summary (3–4 sentences):
    - Key strengths
    - Key weaknesses
    - Recommendation for judges
 
 FORMAT:
-Use markdown with ### headers for each dimension. Include score/level/confidence in a table.
+Use markdown. One score/level/confidence table per section (structure, spec), followed
+by a ### justification per dimension — do not repeat the table per dimension.
 
 Example:
 ```markdown
-### Coupling — Weight 21%
+| Dimension | Weight | Score | Jev Level | Confidence |
+|---|---|---|---|---|
+| Coupling | 21% | 7.5 / 10 | 4 (Good) | 78% |
 
-| | |
-|--|--|
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 78% |
-| **Justification** | [2–3 sentences] |
+#### Coupling
+[2–3 sentences]
 ```
 
 OUTPUT:
@@ -157,16 +159,15 @@ Final report has this structure:
 
 Scores derived from dependency graph + complexity metrics, judged by Jev.
 
-### Coupling — Weight 21%
+| Dimension | Weight | Score | Jev Level | Confidence |
+|---|---|---|---|---|
+| Coupling | 21% | 7.5 / 10 | 4 (Good) | 78% |
+| [5 more structure dimensions...] | | | | |
 
-| | |
-|--|--|
-| **Score** | 7.5 / 10 |
-| **Jev Level** | 4 (Good) |
-| **Confidence** | 78% |
-| **Justification** | [Claude's 2–3 sentences explaining the level + metrics + feedback] |
+#### Coupling
+[Claude's 2–3 sentences explaining the level + metrics + feedback]
 
-### [5 more structure dimensions...]
+#### [5 more structure dimensions...]
 
 ---
 
@@ -180,16 +181,15 @@ Scores from Spec-Driven Development quality, judged by Jev.
 
 The model identified Traceability as the weakest dimension with moderate confidence...
 
-### Clarity & Testability — Weight 25%
+| Dimension | Weight | Score | Jev Answer | Confidence |
+|---|---|---|---|---|
+| Clarity & Testability | 25% | 8.0 / 10 | Yes | 72% |
+| [4 more spec dimensions...] | | | | |
 
-| | |
-|--|--|
-| **Score** | 8.0 / 10 |
-| **Jev Answer** | Yes (threshold met) |
-| **Confidence** | 72% |
-| **Justification** | [Claude's 2–3 sentences] |
+#### Clarity & Testability
+[Claude's 2–3 sentences]
 
-### [4 more spec dimensions...]
+#### [4 more spec dimensions...]
 
 ---
 
