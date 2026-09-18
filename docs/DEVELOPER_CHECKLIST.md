@@ -5,7 +5,7 @@ This checklist guides you through implementing scorer_cli from scratch.
 ## Phase 0: Preparation (1 hour)
 
 - [ ] Read `README.md` (understand what this project does)
-- [ ] Read `docs/ARCHITECTURE.md` (understand the 3-phase pipeline)
+- [ ] Read `ARCHITECTURE.md` (understand the 3-phase pipeline)
 - [ ] Read `spec/rubrics.md` (understand all 11 scoring dimensions)
 - [ ] Review `design/structure-scoring.md` (understand 6 Score primitives)
 - [ ] Review `design/spec-scoring.md` (understand Choice + 5 Noul)
@@ -243,13 +243,13 @@ uv run pytest tests/ -v
 ## Phase 4: Documentation & Handoff (1 hour)
 
 - [ ] Update STRUCTURE.txt if folder layout changed
-- [ ] Update IMPLEMENTATION_GUIDE.md if process changed
-- [ ] Verify all docs in `docs/`, `design/`, `spec/` are accurate
+- [ ] Update this checklist if the implementation process changed
+- [ ] Verify all docs in `docs/`, `docs/design/`, `docs/spec/` are accurate
 - [ ] Test docs: can someone use them to understand your code?
 - [ ] Run lint/format:
   ```bash
-  uv run black score_cli/
-  uv run flake8 score_cli/
+  uv run black app/
+  uv run flake8 app/
   ```
 - [ ] Create CHANGELOG.md (what was implemented)
 - [ ] Tag version: `git tag v0.2.0`
@@ -276,12 +276,11 @@ uv run pytest tests/ -v
 - `design/spec-scoring.md` — Choice + 5 Noul (criteria, mappings)
 - `design/report-generation.md` — LLM prompt design
 - `spec/rubrics.md` — Complete scoring reference (11 dimensions)
-- `_archive/IMPLEMENTATION_GUIDE.md` — Detailed step-by-step code walkthrough
 
 ### Important Modules
 
 ```
-score_cli/
+app/
 ├── metrics.py              (extract metrics.json)
 ├── jev_scorer.py          (call Jev API)
 ├── scoring_engine.py      (map Jev → 0-10 scores)
@@ -338,6 +337,6 @@ When complete, you should have:
 
 ---
 
-**Questions?** Check `docs/FAQ.md` or `docs/ARCHITECTURE.md`.
+**Questions?** Check `ARCHITECTURE.md`.
 
 **Ready?** Start with Phase 0 prep, then Phase 1 setup. Good luck! 🚀

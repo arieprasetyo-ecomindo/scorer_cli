@@ -94,7 +94,7 @@ Each dimension has:
 - **Read full ARCHITECTURE.md** for deep dive
 - **Read design/*.md** for implementation details
 - **Read spec/rubrics.md** to understand scoring anchors
-- **Follow IMPLEMENTATION_GUIDE.md** if you're coding
+- **Follow DEVELOPER_CHECKLIST.md** if you're coding
 
 ## Troubleshooting
 
@@ -155,8 +155,8 @@ You're building these modules:
 3. **llm_reporter.py** — Call Claude with scored_data, get markdown
 4. **report_generator.py** — Write markdown to disk, format output
 
-See `IMPLEMENTATION_GUIDE.md` for full details.
+See `DEVELOPER_CHECKLIST.md` for full details.
 
 ---
 
-**Stuck?** Check `docs/FAQ.md` or the logs: `scorer.log`
+**Stuck?** Check the Troubleshooting section above, `ARCHITECTURE.md`, or the logs: `scorer.log`

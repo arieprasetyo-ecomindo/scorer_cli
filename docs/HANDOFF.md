@@ -8,29 +8,29 @@ This document summarizes what's been completed and what's ready for the next dev
 
 ## What's Complete ✅
 
-### Documentation (11 active docs + 10 archived)
+### Documentation (11 active docs, 3 not yet written)
 
 **User Docs (docs/):**
-- ✅ README.md — Project overview, installation, features
-- ✅ QUICKSTART.md — 5-minute first-time user guide  
+- ✅ README.md — Project overview, installation, features (repo root)
+- ✅ QUICKSTART.md — 5-minute first-time user guide
 - ✅ ARCHITECTURE.md — Full system design, 3-phase pipeline, data structures
-- ✅ API.md — (ready to write) TypeSafe + Anthropic setup
-- ✅ FAQ.md — (ready to write) Troubleshooting
+- ⬜ API.md — (ready to write) TypeSafe + Anthropic setup
+- ⬜ FAQ.md — (ready to write) Troubleshooting
 
-**Design Docs (design/):**
+**Design Docs (docs/design/):**
 - ✅ structure-scoring.md — 6 Score primitives (detailed, ready to code from)
 - ✅ spec-scoring.md — Choice + 5 Noul (detailed, ready to code from)
 - ✅ report-generation.md — LLM prompt, fallback strategy, validation
-- ✅ scoring-math.md — (ready to write) All formulas, weights, thresholds
+- ⬜ scoring-math.md — (ready to write) All formulas, weights, thresholds
 
-**Reference (spec/):**
+**Reference (docs/spec/):**
 - ✅ rubrics.md — Complete 11-dimension rubric reference (for judges & devs)
 
-**Examples (examples/):**
+**Examples (docs/examples/):**
 - ✅ sample-report.md — Full example report showing expected output
 
 **Navigation:**
-- ✅ README.md — Entry point
+- ✅ README.md — Entry point (repo root)
 - ✅ INDEX.md — Documentation map with quick links
 - ✅ STRUCTURE.txt — Folder structure explained
 - ✅ DEVELOPER_CHECKLIST.md — Implementation guide (9–12 hours)
@@ -43,20 +43,22 @@ This document summarizes what's been completed and what's ready for the next dev
 
 ```
 scorer_cli/
-├── docs/               (user documentation)
-├── design/             (implementation specifications)
-├── spec/               (reference: rubrics)
-├── examples/           (sample output)
-├── score_cli/          (empty, ready for code)
-├── _archive/           (old docs, for reference)
-└── [guidance docs]     (README, INDEX, STRUCTURE, DEVELOPER_CHECKLIST, HANDOFF)
+├── README.md           (entry point, repo root)
+├── CLAUDE.md           (Claude Code project instructions, repo root)
+├── config.yaml.example
+├── docs/               (all documentation)
+│   ├── design/         (implementation specifications)
+│   ├── spec/           (reference: rubrics)
+│   ├── examples/       (sample output)
+│   └── [guidance docs] (INDEX, STRUCTURE, DEVELOPER_CHECKLIST, HANDOFF, ARCHITECTURE, QUICKSTART)
+└── app/                (empty, ready for code)
 ```
 
 ---
 
 ## What's NOT Complete (Ready for Next Developer)
 
-### Application Code (score_cli/)
+### Application Code (app/)
 
 These 7 modules need to be implemented:
 
@@ -83,8 +85,8 @@ These 7 modules need to be implemented:
 ### Start Here (Day 1)
 
 1. **Understand the system** (1.5 hours):
-   - Read README.md
-   - Read docs/ARCHITECTURE.md
+   - Read ../README.md
+   - Read ARCHITECTURE.md
    - Read spec/rubrics.md
 
 2. **Get setup** (0.5 hours):
@@ -95,7 +97,6 @@ These 7 modules need to be implemented:
 3. **Implement modules** (4–6 hours):
    - Follow DEVELOPER_CHECKLIST.md
    - Use design/*.md as implementation specs
-   - Refer to _archive/IMPLEMENTATION_GUIDE.md for detailed code walkthrough
 
 4. **Test & validate** (2–3 hours):
    - Write tests for each module
@@ -110,11 +111,11 @@ These 7 modules need to be implemented:
 
 | When You Need To... | Read This |
 |---------------------|-----------|
-| ...understand the system | docs/ARCHITECTURE.md |
+| ...understand the system | ARCHITECTURE.md |
 | ...learn all scoring rules | spec/rubrics.md |
-| ...implement structure scoring | design/structure-scoring.md + _archive/IMPLEMENTATION_GUIDE.md |
-| ...implement spec scoring | design/spec-scoring.md + _archive/IMPLEMENTATION_GUIDE.md |
-| ...implement report generation | design/report-generation.md + _archive/IMPLEMENTATION_GUIDE.md |
+| ...implement structure scoring | design/structure-scoring.md |
+| ...implement spec scoring | design/spec-scoring.md |
+| ...implement report generation | design/report-generation.md |
 | ...know what to build | DEVELOPER_CHECKLIST.md |
 | ...find a doc | INDEX.md |
 
@@ -162,7 +163,7 @@ These 7 modules need to be implemented:
 ## Project Metadata
 
 **Status:** Design complete, code structure ready, awaiting implementation  
-**Folder:** `/Users/Arie/Documents/Galenic_virtual_office/Misc/temp/scorer_cli/`  
+**Folder:** `/Users/Arie/Workspace/ecom/bri/scorer_cli/`  
 **Estimated implementation time:** 9–12 hours (1–2 developer-days)  
 **Critical path:** jev_scorer.py → scoring_engine.py → llm_reporter.py → scorer.py  
 
@@ -216,14 +217,14 @@ You're done when:
 - ✅ Batch scoring works: `uv run score-cli run-all`
 - ✅ Recompute works: `uv run score-cli recompute reports/metrics/*.json`
 - ✅ Docs complete: API.md, scoring-math.md, FAQ.md written
-- ✅ Code linted: `black score_cli/` and `flake8 score_cli/`
+- ✅ Code linted: `black app/` and `flake8 app/`
 - ✅ Version tagged: `git tag v0.2.0`
 
 ---
 
 ## Questions?
 
-- **Confused about architecture?** → Read docs/ARCHITECTURE.md
+- **Confused about architecture?** → Read ARCHITECTURE.md
 - **Don't know what to build?** → Read DEVELOPER_CHECKLIST.md
 - **Need implementation details?** → Read design/*.md
 - **Want to see example output?** → Read examples/sample-report.md

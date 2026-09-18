@@ -116,38 +116,41 @@ $ uv run score-cli recompute reports/metrics/*.json
 ## Directory Structure
 
 ```
-score_cli/
+scorer_cli/                    # project directory
 ├── README.md                  # Main entry point
-├── pyproject.toml             # Dependencies
+├── CLAUDE.md                  # Claude Code project instructions
 ├── config.yaml.example        # Configuration template
 │
-├── docs/                      # User/developer documentation
-│   ├── ARCHITECTURE.md        # This file
-│   ├── QUICKSTART.md          # Get started (5 min)
-│   ├── API.md                 # TypeSafe + Anthropic API setup
-│   └── FAQ.md                 # Troubleshooting
+├── docs/                      # All documentation
+│   ├── INDEX.md                # Navigation guide
+│   ├── ARCHITECTURE.md         # This file
+│   ├── QUICKSTART.md           # Get started (5 min)
+│   ├── HANDOFF.md              # Project handoff summary
+│   ├── DEVELOPER_CHECKLIST.md  # Implementation guide
+│   ├── STRUCTURE.txt           # Folder structure explained
+│   │
+│   ├── design/                 # Implementation design (for devs)
+│   │   ├── structure-scoring.md   # 6 Score primitives (detail)
+│   │   ├── spec-scoring.md        # 1 Choice + 5 Noul (detail)
+│   │   └── report-generation.md   # LLM prompt + fallback logic
+│   │
+│   ├── spec/
+│   │   └── rubrics.md          # Unified rubric reference
+│   │
+│   └── examples/
+│       └── sample-report.md    # Example output (for judges)
 │
-├── design/                    # Implementation design (for devs)
-│   ├── structure-scoring.md   # 6 Score primitives (detail)
-│   ├── spec-scoring.md        # 1 Choice + 5 Noul (detail)
-│   ├── report-generation.md   # LLM prompt + fallback logic
-│   └── scoring-math.md        # Formulas, weights, thresholds
-│
-├── spec/
-│   └── rubrics.md             # Unified rubric reference
-│
-├── examples/
-│   └── sample-report.md       # Example output (for judges)
-│
-└── score_cli/                 # Application code
-    ├── __main__.py            # CLI entry point
-    ├── scorer.py              # Main orchestration
-    ├── metrics.py             # Metrics collection
-    ├── jev_scorer.py          # Jev API calls (judgment)
-    ├── scoring_engine.py      # 0–10 score mapping + arithmetic
-    ├── llm_reporter.py        # Claude API calls (prose)
-    └── report_generator.py    # Markdown formatting + file I/O
+└── app/                        # Application code
+    ├── __main__.py             # CLI entry point
+    ├── scorer.py               # Main orchestration
+    ├── metrics.py              # Metrics collection
+    ├── jev_scorer.py           # Jev API calls (judgment)
+    ├── scoring_engine.py       # 0–10 score mapping + arithmetic
+    ├── llm_reporter.py         # Claude API calls (prose)
+    └── report_generator.py     # Markdown formatting + file I/O
 ```
+
+Note: `pyproject.toml` and a formula reference (`design/scoring-math.md`) are not yet written — see `HANDOFF.md` for what's outstanding.
 
 ## Key Data Structures
 
@@ -317,7 +320,7 @@ Low confidence on critical dimensions (e.g., cyclomatic complexity) → flag for
 **Getting started:**
 1. Read `QUICKSTART.md` (5 min)
 2. Read design docs in `design/` (understand Jev + LLM calls)
-3. Follow `IMPLEMENTATION_GUIDE.md` to code
+3. Follow `DEVELOPER_CHECKLIST.md` to code
 4. Run on sample fixture: `uv run score-cli run fixtures/team-sample-001`
 
 **Key modules:**

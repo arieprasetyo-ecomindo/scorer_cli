@@ -38,44 +38,47 @@ Output: `reports/team-*.md`
 
 ## Documentation
 
+All documentation lives in [`docs/`](docs/) — see [docs/INDEX.md](docs/INDEX.md) for full navigation.
+
 | Document | For | Purpose |
 |----------|-----|---------|
-| **docs/ARCHITECTURE.md** | Architects, leads | System design, 3-phase pipeline, data structures |
 | **docs/QUICKSTART.md** | Users, judges | Get started in 5 minutes |
-| **docs/API.md** | Developers | TypeSafe + Anthropic API setup |
-| **design/structure-scoring.md** | Developers | 6 Score primitives for code (detailed) |
-| **design/spec-scoring.md** | Developers | Choice + 5 Noul for spec (detailed) |
-| **design/report-generation.md** | Developers | LLM prompt, fallback, markdown validation |
-| **spec/rubrics.md** | Judges, developers | Complete rubric reference (11 dimensions) |
-| **examples/sample-report.md** | Judges | Example output for a real submission |
+| **docs/ARCHITECTURE.md** | Architects, leads | System design, 3-phase pipeline, data structures |
+| **docs/DEVELOPER_CHECKLIST.md** | Developers | Step-by-step implementation guide |
+| **docs/design/structure-scoring.md** | Developers | 6 Score primitives for code (detailed) |
+| **docs/design/spec-scoring.md** | Developers | Choice + 5 Noul for spec (detailed) |
+| **docs/design/report-generation.md** | Developers | LLM prompt, fallback, markdown validation |
+| **docs/spec/rubrics.md** | Judges, developers | Complete rubric reference (11 dimensions) |
+| **docs/examples/sample-report.md** | Judges | Example output for a real submission |
 
 ## Directory Structure
 
 ```
 scorer_cli/
 ├── README.md (this file)
-├── pyproject.toml
+├── CLAUDE.md
 ├── config.yaml.example
 │
-├── docs/                    # User/developer documentation
-│   ├── ARCHITECTURE.md
-│   ├── QUICKSTART.md
-│   ├── API.md
-│   └── FAQ.md
+├── docs/                        # All documentation
+│   ├── INDEX.md                 # Navigation guide
+│   ├── ARCHITECTURE.md          # System design, 3-phase pipeline
+│   ├── QUICKSTART.md            # 5-minute first-time user guide
+│   ├── HANDOFF.md               # Project handoff summary
+│   ├── DEVELOPER_CHECKLIST.md   # Implementation guide
+│   ├── STRUCTURE.txt            # Folder structure explained
+│   │
+│   ├── design/                  # Implementation design (for devs)
+│   │   ├── structure-scoring.md
+│   │   ├── spec-scoring.md
+│   │   └── report-generation.md
+│   │
+│   ├── spec/
+│   │   └── rubrics.md           # Complete rubric reference
+│   │
+│   └── examples/
+│       └── sample-report.md     # Example output
 │
-├── design/                  # Implementation design
-│   ├── structure-scoring.md
-│   ├── spec-scoring.md
-│   ├── report-generation.md
-│   └── scoring-math.md
-│
-├── spec/
-│   └── rubrics.md          # Complete rubric reference
-│
-├── examples/
-│   └── sample-report.md    # Example output
-│
-└── score_cli/              # Application code
+└── app/                         # Application code
     ├── __main__.py
     ├── scorer.py
     ├── metrics.py
@@ -127,7 +130,7 @@ uv run score-cli recompute reports/metrics/*.json
 4. Traceability (spec ↔ code mapping)
 5. Substance Over Polish (real content, not filler)
 
-See `spec/rubrics.md` for complete rubric.
+See `docs/spec/rubrics.md` for complete rubric.
 
 ## Configuration
 
@@ -150,7 +153,7 @@ weights:
   spec: 0.5
 ```
 
-Full configuration reference: `docs/API.md`
+Full configuration reference: `docs/ARCHITECTURE.md#configuration-configyaml`
 
 ## Input Format
 
@@ -172,7 +175,7 @@ reports/
       metrics.json (for reproducibility/recomputation)
 ```
 
-Example report: `examples/sample-report.md`
+Example report: `docs/examples/sample-report.md`
 
 ## Development
 
@@ -182,7 +185,7 @@ Example report: `examples/sample-report.md`
 - `llm_reporter.py` — Claude API calls for markdown generation
 - `report_generator.py` — Write reports to disk, format output
 
-**See:** `IMPLEMENTATION_GUIDE.md` (step-by-step)
+**See:** `docs/DEVELOPER_CHECKLIST.md` (step-by-step)
 
 ## Troubleshooting
 
@@ -194,7 +197,7 @@ Example report: `examples/sample-report.md`
 | LLM timeout | Falls back to auto-generated markdown (scores only) |
 | Missing submission files | Ensure graph.json, source.zip, sdd.zip present |
 
-Full troubleshooting: `docs/FAQ.md`
+Full troubleshooting: `docs/QUICKSTART.md#troubleshooting`
 
 ## Cost & Performance
 
@@ -215,14 +218,14 @@ Reports contain:
 
 **Use confidence to prioritize manual review:** Low confidence (<0.5) on critical dimensions means ambiguous signal → review manually.
 
-Example: `examples/sample-report.md`
+Example: `docs/examples/sample-report.md`
 
 ## Next Steps
 
 1. **New to scorer_cli?** → Read `docs/QUICKSTART.md` (5 min)
 2. **Want to understand architecture?** → Read `docs/ARCHITECTURE.md`
-3. **Going to implement it?** → Read `IMPLEMENTATION_GUIDE.md`
-4. **Want to judge submissions?** → Read `examples/sample-report.md` + `spec/rubrics.md`
+3. **Going to implement it?** → Read `docs/DEVELOPER_CHECKLIST.md`
+4. **Want to judge submissions?** → Read `docs/examples/sample-report.md` + `docs/spec/rubrics.md`
 
 ## License
 
@@ -230,6 +233,6 @@ Example: `examples/sample-report.md`
 
 ## Support
 
-- Questions? → Check `docs/FAQ.md`
+- Questions? → Check `docs/QUICKSTART.md` or `docs/INDEX.md`
 - Bug? → Check logs at `scorer.log`
 - Contributing? → See `CONTRIBUTING.md` (TBD)
