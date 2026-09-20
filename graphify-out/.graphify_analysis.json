@@ -1,0 +1,328 @@
+{
+  "communities": {
+    "0": [
+      "app_jev_scorer",
+      "app_jev_scorer_build_jev_log",
+      "app_jev_scorer_call_spec_jev",
+      "app_jev_scorer_call_structure_jev",
+      "app_jev_scorer_level_label",
+      "app_jev_scorer_noul_score",
+      "app_jev_scorer_noul_to_answer_and_confidence",
+      "app_jev_scorer_parse_spec_response",
+      "app_jev_scorer_parse_structure_response",
+      "app_jev_scorer_rationale_1",
+      "app_jev_scorer_rationale_121",
+      "app_jev_scorer_rationale_132",
+      "app_jev_scorer_rationale_222",
+      "app_jev_scorer_rationale_233",
+      "app_jev_scorer_rationale_283",
+      "app_jev_scorer_rationale_294",
+      "app_jev_scorer_rationale_75",
+      "app_jev_scorer_score_spec",
+      "app_jev_scorer_score_spec_with_response",
+      "app_jev_scorer_score_structure_with_response",
+      "app_jev_scorer_usage_dict",
+      "tests_test_spec_scoring",
+      "tests_test_spec_scoring_default_nouls",
+      "tests_test_spec_scoring_fakespecclient",
+      "tests_test_spec_scoring_fakespecclient_init",
+      "tests_test_spec_scoring_fakespecclient_system_one",
+      "tests_test_spec_scoring_rationale_19",
+      "tests_test_spec_scoring_test_build_jev_log_captures_raw_spec_response",
+      "tests_test_spec_scoring_test_live_smoke_against_real_jev_api",
+      "tests_test_spec_scoring_test_noul_score_interpolation_matches_docs_examples",
+      "tests_test_spec_scoring_test_noul_to_answer_and_confidence_no",
+      "tests_test_spec_scoring_test_noul_to_answer_and_confidence_uncertain",
+      "tests_test_spec_scoring_test_noul_to_answer_and_confidence_yes",
+      "tests_test_spec_scoring_test_score_spec_shape",
+      "tests_test_spec_scoring_test_score_spec_uses_custom_score_range_from_config",
+      "tests_test_spec_scoring_test_weighted_spec_total",
+      "typesafeclient"
+    ],
+    "1": [
+      "app_metrics_build_file_graph",
+      "app_metrics_compute_graph_metrics",
+      "app_metrics_extract_codebase_modules",
+      "app_metrics_find_cycles",
+      "app_metrics_load_graph",
+      "app_metrics_mean",
+      "app_metrics_rationale_195",
+      "app_metrics_rationale_33",
+      "app_metrics_rationale_72",
+      "app_metrics_rationale_90",
+      "digraph",
+      "tests_test_metrics",
+      "tests_test_metrics_make_link",
+      "tests_test_metrics_make_node",
+      "tests_test_metrics_nx_has_no_self_loops",
+      "tests_test_metrics_test_betweenness_on_star_graph",
+      "tests_test_metrics_test_cross_file_edge_is_counted",
+      "tests_test_metrics_test_cycle_is_detected",
+      "tests_test_metrics_test_edge_to_unresolved_symbol_is_dropped",
+      "tests_test_metrics_test_empty_graph_does_not_crash",
+      "tests_test_metrics_test_extract_codebase_modules_dedupes_and_sorts",
+      "tests_test_metrics_test_extract_codebase_modules_on_real_sample_graph",
+      "tests_test_metrics_test_fan_in_fan_out",
+      "tests_test_metrics_test_longest_dependency_path_on_chain",
+      "tests_test_metrics_test_metrics_smoke_on_real_sample_graph",
+      "tests_test_metrics_test_non_code_node_is_dropped",
+      "tests_test_metrics_test_non_dependency_relation_is_dropped",
+      "tests_test_metrics_test_repeated_edges_aggregate_weight",
+      "tests_test_metrics_test_same_file_edge_is_dropped",
+      "tests_test_metrics_test_smoke_on_real_sample_graph"
+    ],
+    "2": [
+      "app_metrics",
+      "app_metrics_compute_complexity_metrics",
+      "app_metrics_compute_complexity_metrics_from_zip",
+      "app_metrics_extract_source",
+      "app_metrics_extract_spec_text",
+      "app_metrics_extract_spec_text_from_zip",
+      "app_metrics_iter_code_files",
+      "app_metrics_iter_spec_files",
+      "app_metrics_py_path",
+      "app_metrics_rationale_1",
+      "app_metrics_rationale_139",
+      "app_metrics_rationale_156",
+      "app_metrics_rationale_218",
+      "tests_test_complexity",
+      "tests_test_complexity_test_avg_parameter_count",
+      "tests_test_complexity_test_branchy_function_exceeds_threshold",
+      "tests_test_complexity_test_extract_source",
+      "tests_test_complexity_test_non_code_files_are_ignored",
+      "tests_test_complexity_test_pycache_dir_is_excluded",
+      "tests_test_complexity_test_simple_function_has_ccn_one",
+      "tests_test_complexity_test_smoke_on_real_sample_zip",
+      "tests_test_sdd",
+      "tests_test_sdd_test_concatenates_markdown_files_with_headers",
+      "tests_test_sdd_test_nested_directories_are_included",
+      "tests_test_sdd_test_non_spec_files_are_ignored",
+      "tests_test_sdd_test_output_is_deterministic",
+      "tests_test_sdd_test_smoke_on_real_sample_sdd_zip"
+    ],
+    "3": [
+      "app_chart_generator",
+      "app_chart_generator_generate_score_chart",
+      "app_chart_generator_plot_dimensions",
+      "app_chart_generator_py_path",
+      "app_chart_generator_rationale_1",
+      "app_chart_generator_rationale_55",
+      "app_chart_generator_score_color",
+      "app_report_writer",
+      "app_report_writer_py_path",
+      "app_report_writer_rationale_1",
+      "app_report_writer_spec_table_md",
+      "app_report_writer_structure_table_md",
+      "app_report_writer_write_markdown_report",
+      "tests_test_chart_generator",
+      "tests_test_chart_generator_test_generate_chart_requires_some_scores",
+      "tests_test_chart_generator_test_generate_chart_structure_only",
+      "tests_test_chart_generator_test_generate_chart_with_both_sections",
+      "tests_test_chart_generator_test_score_color_tiers",
+      "tests_test_report_writer",
+      "tests_test_report_writer_test_write_markdown_report_includes_all_sections",
+      "tests_test_report_writer_test_write_markdown_report_no_red_flags"
+    ],
+    "4": [
+      "app_jev_scorer_weighted_spec_total",
+      "app_report_generator",
+      "app_report_generator_compute_all_red_flags",
+      "app_report_generator_compute_complexity_red_flags",
+      "app_report_generator_compute_graph_red_flags",
+      "app_report_generator_compute_spec_red_flags",
+      "app_report_generator_rationale_1",
+      "app_report_generator_rationale_106",
+      "app_report_generator_rationale_24",
+      "app_report_generator_render_complexity_section",
+      "app_report_generator_render_graph_section",
+      "app_report_generator_render_jev_spec_section",
+      "app_report_generator_render_jev_structure_section",
+      "app_report_generator_render_report",
+      "app_report_generator_score_bar",
+      "app_report_generator_score_color",
+      "console"
+    ],
+    "5": [
+      "anthropic",
+      "app_llm_reporter",
+      "app_llm_reporter_build_prompt",
+      "app_llm_reporter_generate_fallback_narrative",
+      "app_llm_reporter_generate_narrative",
+      "app_llm_reporter_rationale_1",
+      "app_llm_reporter_rationale_86",
+      "tests_test_llm_reporter",
+      "tests_test_llm_reporter_fakeanthropicclient",
+      "tests_test_llm_reporter_fakeanthropicclient_create",
+      "tests_test_llm_reporter_fakeanthropicclient_init",
+      "tests_test_llm_reporter_test_build_prompt_handles_missing_sections",
+      "tests_test_llm_reporter_test_build_prompt_includes_scores_and_flags",
+      "tests_test_llm_reporter_test_generate_fallback_narrative_has_scores_no_llm",
+      "tests_test_llm_reporter_test_generate_narrative_calls_client_and_returns_text",
+      "tests_test_llm_reporter_test_live_smoke_against_real_anthropic_api"
+    ],
+    "6": [
+      "app_jev_scorer_rationale_112",
+      "app_jev_scorer_rationale_70",
+      "app_jev_scorer_rescale_score",
+      "app_jev_scorer_score_structure",
+      "app_jev_scorer_weighted_structure_total",
+      "tests_test_jev_scorer",
+      "tests_test_jev_scorer_fakeclient",
+      "tests_test_jev_scorer_fakeclient_init",
+      "tests_test_jev_scorer_fakeclient_system_one",
+      "tests_test_jev_scorer_rationale_19",
+      "tests_test_jev_scorer_test_build_jev_log_captures_raw_structure_response",
+      "tests_test_jev_scorer_test_live_smoke_against_real_jev_api",
+      "tests_test_jev_scorer_test_rescale_score_endpoints",
+      "tests_test_jev_scorer_test_score_structure_rescales_each_dimension",
+      "tests_test_jev_scorer_test_weighted_structure_total",
+      "tests_test_jev_scorer_test_weighted_structure_total_mixed_scores"
+    ],
+    "7": [
+      "app_config",
+      "app_config_load_config",
+      "app_config_py_path",
+      "app_config_rationale_1",
+      "app_jev_scorer_py_path",
+      "app_jev_scorer_write_jev_log",
+      "app_main",
+      "app_main_main",
+      "app_main_report",
+      "tests_test_config",
+      "tests_test_config_test_load_missing_config_raises_clear_error",
+      "tests_test_config_test_load_real_config_has_expected_sections",
+      "tests_test_jev_scorer_test_write_jev_log_writes_json_file"
+    ],
+    "8": [
+      "app_init"
+    ],
+    "9": [
+      "tests_conftest"
+    ]
+  },
+  "cohesion": {
+    "0": 0.1111111111111111,
+    "1": 0.1471264367816092,
+    "2": 0.15669515669515668,
+    "3": 0.16666666666666666,
+    "4": 0.25735294117647056,
+    "5": 0.225,
+    "6": 0.21666666666666667,
+    "7": 0.24358974358974358,
+    "8": 1.0,
+    "9": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_main_report",
+      "label": "report()",
+      "degree": 21
+    },
+    {
+      "id": "app_metrics_build_file_graph",
+      "label": "build_file_graph()",
+      "degree": 14
+    },
+    {
+      "id": "app_metrics_compute_graph_metrics",
+      "label": "compute_graph_metrics()",
+      "degree": 14
+    },
+    {
+      "id": "app_metrics_compute_complexity_metrics",
+      "label": "compute_complexity_metrics()",
+      "degree": 12
+    },
+    {
+      "id": "app_report_generator_render_report",
+      "label": "render_report()",
+      "degree": 12
+    },
+    {
+      "id": "app_report_writer_write_markdown_report",
+      "label": "write_markdown_report()",
+      "degree": 12
+    },
+    {
+      "id": "app_chart_generator_generate_score_chart",
+      "label": "generate_score_chart()",
+      "degree": 10
+    },
+    {
+      "id": "app_jev_scorer_score_structure",
+      "label": "score_structure()",
+      "degree": 10
+    },
+    {
+      "id": "app_jev_scorer_weighted_structure_total",
+      "label": "weighted_structure_total()",
+      "degree": 10
+    },
+    {
+      "id": "app_jev_scorer_score_spec",
+      "label": "score_spec()",
+      "degree": 10
+    }
+  ],
+  "surprises": [
+    {
+      "source": "test_generate_chart_requires_some_scores()",
+      "target": "generate_score_chart()",
+      "source_files": [
+        "tests/test_chart_generator.py",
+        "app/chart_generator.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `test_generate_chart_requires_some_scores()` unexpectedly reaches hub `generate_score_chart()`"
+    },
+    {
+      "source": "test_generate_chart_structure_only()",
+      "target": "generate_score_chart()",
+      "source_files": [
+        "tests/test_chart_generator.py",
+        "app/chart_generator.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `test_generate_chart_structure_only()` unexpectedly reaches hub `generate_score_chart()`"
+    },
+    {
+      "source": "test_generate_chart_with_both_sections()",
+      "target": "generate_score_chart()",
+      "source_files": [
+        "tests/test_chart_generator.py",
+        "app/chart_generator.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `test_generate_chart_with_both_sections()` unexpectedly reaches hub `generate_score_chart()`"
+    },
+    {
+      "source": "test_load_missing_config_raises_clear_error()",
+      "target": "load_config()",
+      "source_files": [
+        "tests/test_config.py",
+        "app/config.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `test_load_missing_config_raises_clear_error()` unexpectedly reaches hub `load_config()`"
+    },
+    {
+      "source": "test_load_real_config_has_expected_sections()",
+      "target": "load_config()",
+      "source_files": [
+        "tests/test_config.py",
+        "app/config.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `test_load_real_config_has_expected_sections()` unexpectedly reaches hub `load_config()`"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

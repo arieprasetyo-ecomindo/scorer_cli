@@ -1,21 +1,24 @@
 # scorer_cli
 
-Automated hackathon submission scoring: code structure + Spec-Driven Development quality.
+Automated hackathon submission scoring: code structure + Spec-Driven Development (SDD) quality.
 
 ## What It Does
 
-Scores code and spec quality using:
-- **Jev** (TypeSafe System One) for structured judgment → levels + confidence
-- **Claude** for readable prose explanations → markdown reports
+Scores a team's submission using:
+- **Jev** (TypeSafe System One) for structured judgment on code structure and spec quality
+- **Claude** (Anthropic) for a concise, score-focused narrative summary
+- **NetworkX** + **Lizard** for the local, deterministic metrics that feed Jev
 
 **Pipeline:**
-1. Extract metrics from source code + spec documents
-2. Ask Jev to judge code structure (6 dimensions) and spec quality (5 dimensions)
-3. Map Jev scores to 0–10, compute weights
-4. Ask Claude to write markdown explanations
-5. Output: `reports/team-X.md` with scores + prose + confidence levels
+1. Parse `graph.json` (Graphify output) → file-level dependency graph → graph metrics (coupling, cycles, depth, betweenness) via NetworkX
+2. Extract `source.zip` → complexity metrics (cyclomatic complexity, function size) via Lizard
+3. Extract `sdd.zip` → concatenated spec text (framework-agnostic — works with OpenSpec, a plain `SPEC.md`, ADRs, anything)
+4. Ask Jev to judge structure (6 Score dimensions) and spec quality (1 Choice + 5 Noul dimensions)
+5. Rescale Jev's answers to 0–10, apply weights from `config.yaml`, compute a combined score
+6. Ask Claude for a short narrative summary (falls back to a scores-only summary if the call fails)
+7. Render a Rich-formatted report in the terminal, a chart (`matplotlib`), and a markdown report to disk
 
-## Get Started (5 min)
+## Get Started
 
 ```bash
 # Install
@@ -25,16 +28,22 @@ uv sync
 
 # Configure
 cp config.yaml.example config.yaml
-export TYPESAFE_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
+cp .env.example .env
+# then edit .env and fill in:
+#   TYPESAFE_API_KEY=...   (from https://console.typesafe.ai/settings/keys)
+#   ANTHROPIC_API_KEY=...  (from the Anthropic console)
 
-# Run
-uv run score-cli run-all
+# Run on the sample fixture
+uv run score-cli report sample_team_phoenix
 ```
 
-Output: `reports/team-*.md`
+This prints a full Rich-formatted report to the terminal and writes:
+- `reports/sample_team_phoenix.md` — the markdown report (chart + score tables + narrative)
+- `reports/sample_team_phoenix_chart.png` — the score chart embedded in that report
+- `fixtures/sample_team_phoenix/jev_log.json` — the raw Jev response (for judge auditability)
 
-**Full guide:** Read `docs/QUICKSTART.md`
+Missing `source.zip`, `sdd.zip`, or an API key doesn't crash the run — each stage is skipped
+with a clear reason shown in its place, and whatever's available still gets scored.
 
 ## Documentation
 
@@ -50,7 +59,11 @@ All documentation lives in [`docs/`](docs/) — see [docs/INDEX.md](docs/INDEX.m
 | **docs/design/spec-scoring.md** | Developers | Choice + 5 Noul for spec (detailed) |
 | **docs/design/report-generation.md** | Developers | LLM prompt, fallback, markdown validation |
 | **docs/spec/rubrics.md** | Judges, developers | Complete rubric reference (11 dimensions) |
-| **docs/examples/sample-report.md** | Judges | Example output for a real submission |
+| **docs/examples/sample-report.md** | Judges | Illustrative example report |
+
+> Some docs above (`QUICKSTART.md`, `HANDOFF.md`, `DEVELOPER_CHECKLIST.md`) predate the working
+> implementation and still describe a planned `run` / `run-all` / `--dry-run` / `recompute` CLI
+> that doesn't exist yet — see [Roadmap](#roadmap) below for the real state.
 
 ## Directory Structure
 
@@ -59,60 +72,46 @@ scorer_cli/
 ├── README.md (this file)
 ├── CLAUDE.md
 ├── config.yaml.example
+├── config.yaml            # your local copy, gitignored secrets live in .env instead
+├── .env.example
 │
-├── docs/                        # All documentation
-│   ├── INDEX.md                 # Navigation guide
-│   ├── HOW_IT_WORKS.md          # Simplified pipeline diagram (for participants)
-│   ├── ARCHITECTURE.md          # System design, 3-phase pipeline
-│   ├── QUICKSTART.md            # 5-minute first-time user guide
-│   ├── HANDOFF.md               # Project handoff summary
-│   ├── DEVELOPER_CHECKLIST.md   # Implementation guide
-│   │
-│   ├── design/                  # Implementation design (for devs)
-│   │   ├── structure-scoring.md
-│   │   ├── spec-scoring.md
-│   │   └── report-generation.md
-│   │
-│   ├── spec/
-│   │   └── rubrics.md           # Complete rubric reference
-│   │
-│   └── examples/
-│       └── sample-report.md     # Example output
+├── docs/                        # All documentation (see table above)
 │
-└── app/                         # Application code
-    ├── __main__.py
-    ├── scorer.py
-    ├── metrics.py
-    ├── jev_scorer.py
-    ├── scoring_engine.py
-    ├── llm_reporter.py
-    └── report_generator.py
+├── fixtures/                    # Team submissions to score
+│   └── sample_team_phoenix/
+│       ├── graph.json            (Graphify dependency graph)
+│       ├── source.zip            (source code)
+│       ├── sdd.zip                (spec documents)
+│       └── jev_log.json           (generated: raw Jev response)
+│
+├── reports/                     # Generated output (gitignored)
+│   ├── sample_team_phoenix.md
+│   └── sample_team_phoenix_chart.png
+│
+├── app/                         # Application code
+│   ├── __main__.py               CLI entry point
+│   ├── config.py                 Loads config.yaml
+│   ├── metrics.py                Graph metrics (NetworkX) + complexity metrics (Lizard) + spec text extraction
+│   ├── jev_scorer.py              Jev API calls: structure (Score) + spec (Choice/Noul) scoring, weights, logging
+│   ├── llm_reporter.py            Claude API call for the narrative summary + fallback
+│   ├── chart_generator.py         matplotlib score chart (also runnable standalone)
+│   ├── report_generator.py        Rich terminal report + red-flag rules
+│   └── report_writer.py           Assembles the final markdown report
+│
+└── tests/                       # pytest suite (mocked API clients + live smoke tests gated on API keys)
 ```
 
 ## CLI Commands
 
 ```bash
-# Score one submission
-uv run score-cli run team-a-007
+# Score one submission (looks for fixtures/<team_name>/)
+uv run score-cli report <team_name>
 
-# Score all submissions
-uv run score-cli run-all
-
-# Metrics only (no API calls)
-uv run score-cli run team-a-007 --dry-run
-
-# Recompute from existing metrics (no API calls)
-uv run score-cli recompute reports/metrics/*.json
+# e.g.
+uv run score-cli report sample_team_phoenix
 ```
 
-## Key Features
-
-- **Deterministic scoring:** Metrics + Jev + code arithmetic = reproducible results
-- **Confidence levels:** Every Jev answer includes confidence (0–1) for judges to prioritize review
-- **Fast:** ~4s per submission (Jev <1s each, LLM <2s) vs. 20–60s with older approaches
-- **Cheap:** ~4–5 min-tokens per submission (50–60% savings)
-- **Fallback:** If LLM fails, auto-generates structured markdown (scores only)
-- **Composable:** Change weights in `config.yaml`, recompute all scores in seconds (no API calls needed)
+That's the only command today — see [Roadmap](#roadmap) for `run-all`/batch scoring.
 
 ## Scoring Dimensions
 
@@ -131,101 +130,106 @@ uv run score-cli recompute reports/metrics/*.json
 4. Traceability (spec ↔ code mapping)
 5. Substance Over Polish (real content, not filler)
 
-See `docs/spec/rubrics.md` for complete rubric.
+See `docs/spec/rubrics.md` for the complete rubric, and `docs/design/spec-scoring.md` for how
+spec scoring actually derives an answer + confidence from Jev's single Noul probability.
 
 ## Configuration
 
-Copy `config.yaml.example` to `config.yaml` and fill in:
+Copy `config.yaml.example` to `config.yaml`. Fields actually read by the code today:
 
 ```yaml
-typesafe:
-  api_key_env: "TYPESAFE_API_KEY"
-  api_endpoint: "https://api.typesafe.ai"
-  model: "jev-latest"
-
 report_generation:
-  api_key_env: "ANTHROPIC_API_KEY"
-  model: "claude-opus-5"  # or claude-haiku for cost
+  model: "claude-opus-5"   # or claude-haiku for cost
   max_tokens: 2000
 
 weights:
-  structure: 0.5
-  spec: 0.5
+  structure: 0.5            # combined_score = structure_total * this ...
+  spec: 0.5                 # ... + spec_total * this
+
+spec_rubric:                # per-dimension yes/no score interpolation ranges
+  clarity_testability:
+    yes_score_range: [7.5, 9.0]
+    no_score_range: [1.0, 4.0]
+  # ... one entry per spec dimension
+
+red_flags:                  # thresholds used by the red-flag checks
+  circular_deps_involving_more_than: 3
+  max_ccn_threshold: 20
+  fan_coupling_multiple: 5.0
+  betweenness_multiple: 10.0
+  min_modules_mentioned: 2
+  choice_confidence_low: 0.45
+  templated_boilerplate: true
 ```
 
-Full configuration reference: `docs/ARCHITECTURE.md#configuration-configyaml`
+Not yet wired up (present in `config.yaml.example` but currently ignored): `typesafe.*`
+(the SDK reads `TYPESAFE_API_KEY`/model defaults directly), `max_retries`/`retry_delay_seconds`
+on either API, `spec_rubric.*.threshold`, `batch.*`, `logging.*`. Per-dimension *weights* for
+structure (21/17/13/21/13/15%) and spec (25/15/15/25/20%) are hardcoded in `app/jev_scorer.py`,
+not read from `config.yaml`.
+
+Real API notes worth knowing if you edit this file:
+- `typesafe.model` must be `"jev-latest"` (or a pinned version) — the real `typesafe-sdk`
+  rejects the bare name `"jev"`.
+- There is no `temperature` field for `report_generation` — the real `anthropic-sdk` (checked
+  at v1.6.0) doesn't have that parameter anymore.
 
 ## Input Format
 
 ```
-submissions/
-  team-a-007/
-    graph.json      (dependency graph from Graphify)
-    source.zip      (source code)
-    sdd.zip         (spec documents)
+fixtures/
+  <team_name>/
+    graph.json      (dependency graph from Graphify — required)
+    source.zip       (source code — optional; skips complexity + structure Jev scoring if absent)
+    sdd.zip           (spec documents — optional; skips spec Jev scoring if absent)
 ```
 
-## Output Format
+## Output
+
+Running `report` prints a full Rich terminal report (graph metrics, complexity metrics,
+Structure/Spec Quality tables with inline score bars, a combined-score meter, and red flags),
+and — whenever there's at least one Jev score to report — writes to disk:
 
 ```
 reports/
-  team-a-007.md   (markdown report: scores + prose + confidence)
-  metrics/
-    team-a-007/
-      metrics.json (for reproducibility/recomputation)
+  <team_name>.md          (markdown report: chart + score tables + narrative + red flags)
+  <team_name>_chart.png    (score chart, embedded in the .md above)
+
+fixtures/<team_name>/
+  jev_log.json             (raw Jev response: model, token usage, per-dimension scores/confidence/probabilities)
 ```
 
-Example report: `docs/examples/sample-report.md`
+Example report: `docs/examples/sample-report.md` (illustrative — written before the real
+implementation, so exact formatting may differ slightly from what `report` produces today).
 
-## Development
+## Roadmap
 
-**Implement these modules:**
-- `jev_scorer.py` — Jev API calls (6 Score + Choice + 5 Noul)
-- `scoring_engine.py` — Map Jev answers to 0–10 scores + weights
-- `llm_reporter.py` — Claude API calls for markdown generation
-- `report_generator.py` — Write reports to disk, format output
+**Done:**
+- ✅ Graph metrics (NetworkX) from Graphify's `graph.json`
+- ✅ Complexity metrics (Lizard) from `source.zip`
+- ✅ Framework-agnostic spec text extraction from `sdd.zip`
+- ✅ Jev structure scoring (6 Score primitives)
+- ✅ Jev spec/SDD scoring (1 Choice + 5 Noul primitives)
+- ✅ `config.yaml`-driven weights, spec score ranges, and red-flag thresholds
+- ✅ Structure + spec red flags
+- ✅ Raw Jev response logging (`jev_log.json`) for judge auditability
+- ✅ Claude narrative summary, with a scores-only fallback if the API call fails
+- ✅ matplotlib score chart + Rich terminal bars, embedded in the markdown report
+- ✅ End-to-end tests (mocked clients for CI + live smoke tests gated on real API keys)
 
-**See:** `docs/DEVELOPER_CHECKLIST.md` (step-by-step)
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| Modules not found | `uv sync` |
-| API keys not set | `export TYPESAFE_API_KEY=... && export ANTHROPIC_API_KEY=...` |
-| Jev timeout | Retries automatically; check TypeSafe status if persistent |
-| LLM timeout | Falls back to auto-generated markdown (scores only) |
-| Missing submission files | Ensure graph.json, source.zip, sdd.zip present |
-
-Full troubleshooting: `docs/QUICKSTART.md#troubleshooting`
-
-## Cost & Performance
-
-| Metric | Value |
-|--------|-------|
-| Tokens/submission | ~4–5 (was 10) |
-| API calls/submission | 3 (2 Jev + 1 LLM) |
-| Latency/submission | ~4s (was 20–60s) |
-| Cost/50 teams | ~$2 (was $4) |
-
-## For Judges
-
-Reports contain:
-- **Score:** 0–10 rating per dimension
-- **Level:** 1–5 qualitative level (Critical → Excellent)
-- **Confidence:** 0–1 (how sure Jev is)
-- **Justification:** 2–3 sentences explaining the score
-
-**Use confidence to prioritize manual review:** Low confidence (<0.5) on critical dimensions means ambiguous signal → review manually.
-
-Example: `docs/examples/sample-report.md`
-
-## Next Steps
-
-1. **New to scorer_cli?** → Read `docs/QUICKSTART.md` (5 min)
-2. **Want to understand architecture?** → Read `docs/ARCHITECTURE.md`
-3. **Going to implement it?** → Read `docs/DEVELOPER_CHECKLIST.md`
-4. **Want to judge submissions?** → Read `docs/examples/sample-report.md` + `docs/spec/rubrics.md`
+**Not yet done:**
+- ⬜ Batch mode (`run-all` across every folder in `fixtures/`)
+- ⬜ `metrics.json` persistence + a `recompute` command (re-score from cached metrics without
+  new API calls when you only change `config.yaml` weights)
+- ⬜ Retry-policy wiring (`max_retries`/`retry_delay_seconds` in `config.yaml` aren't read yet —
+  each API call is tried once, then falls back)
+- ⬜ `docs/API.md`, `docs/FAQ.md`, `docs/design/scoring-math.md` (referenced as "ready to write"
+  since the original handoff, still unwritten)
+- ⬜ `docs/design/report-generation.md`'s prompt template still shows the old verbose
+  per-dimension prose style, not the concise prompt `app/llm_reporter.py` actually uses
+- ⬜ `docs/QUICKSTART.md`, `docs/HANDOFF.md`, `docs/DEVELOPER_CHECKLIST.md` still describe the
+  pre-implementation planned CLI (`run`/`run-all`/`--dry-run`/`recompute`) rather than the real
+  `report` command
 
 ## License
 
@@ -234,5 +238,5 @@ Example: `docs/examples/sample-report.md`
 ## Support
 
 - Questions? → Check `docs/QUICKSTART.md` or `docs/INDEX.md`
-- Bug? → Check logs at `scorer.log`
+- Bug? → Open an issue / check the test suite (`uv run pytest tests/ -v`)
 - Contributing? → See `CONTRIBUTING.md` (TBD)

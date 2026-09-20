@@ -55,5 +55,7 @@ fixtures/*
 # Generated per-run output, not part of the fixture itself
 fixtures/*/jev_log.json
 
+config.yaml
+
 # Generated markdown reports + charts
 reports/
