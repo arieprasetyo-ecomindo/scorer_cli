@@ -1,4 +1,6 @@
-"""Render graph/complexity metrics and Jev structure+spec scores as a Rich terminal report."""
+"""Render graph/complexity metrics, deterministic structure scores, and Jev spec
+scores as a Rich terminal report.
+"""
 
 import re
 
@@ -7,7 +9,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from app.chart_generator import HIGH_COLOR, LOW_COLOR, MID_COLOR
-from app.jev_scorer import SPEC_WEIGHTS, STRUCTURE_WEIGHTS, weighted_spec_total, weighted_structure_total
+from app.jev_scorer import SPEC_WEIGHTS, weighted_spec_total
+from app.structure_scorer import STRUCTURE_WEIGHTS, weighted_structure_total
 
 TEMPLATED_PLACEHOLDER_RE = re.compile(r"\[(TODO|TBD|description here|FIXME)\]", re.IGNORECASE)
 
@@ -163,31 +166,29 @@ def render_complexity_section(console: Console, metrics: dict) -> None:
         console.print(worst)
 
 
-def render_jev_structure_section(console: Console, jev_scores: dict) -> float:
-    table = Table(title="Structure Quality (Jev)", header_style="bold magenta")
+def render_structure_section(console: Console, structure_scores: dict) -> float:
+    table = Table(title="Structure Quality (Code Metrics)", header_style="bold magenta")
     table.add_column("Dimension", no_wrap=True)
     table.add_column("Weight", justify="right", no_wrap=True)
     table.add_column("Score", justify="right", no_wrap=True)
     table.add_column("", no_wrap=True)
-    table.add_column("Jev Level", justify="right", no_wrap=True)
-    table.add_column("Confidence", justify="right", no_wrap=True)
+    table.add_column("Level", justify="right", no_wrap=True)
     for dim, weight in STRUCTURE_WEIGHTS.items():
-        answer = jev_scores[dim]
+        answer = structure_scores[dim]
         table.add_row(
             dim.replace("_", " ").title(),
             f"{weight:.0%}",
             f"{answer['score_0_10']:.1f} / 10",
             score_bar(answer["score_0_10"]),
             f"{answer['level']} ({answer['level_label']})",
-            f"{answer['confidence']:.0%}",
         )
     console.print(table)
-    total = weighted_structure_total(jev_scores)
+    total = weighted_structure_total(structure_scores)
     console.print(f"[bold]Structure Weighted Total: {total:.1f} / 10[/bold]")
     return total
 
 
-def render_jev_spec_section(console: Console, spec_scores: dict) -> float:
+def render_spec_section(console: Console, spec_scores: dict) -> float:
     weakest = spec_scores["weakest_dimension"]
     console.print(
         f"Weakest Dimension (diagnostic): [yellow]{weakest['choice']}[/yellow] "
@@ -223,8 +224,8 @@ def render_report(
     graph_metrics: dict,
     config: dict,
     complexity_metrics: dict | None = None,
-    jev_scores: dict | None = None,
-    jev_skip_reason: str = "Jev structure scoring skipped.",
+    structure_scores: dict | None = None,
+    structure_skip_reason: str = "No source.zip found — complexity metrics needed for structure scoring.",
     spec_scores: dict | None = None,
     spec_text: str | None = None,
     codebase_modules: list[str] | None = None,
@@ -249,14 +250,16 @@ def render_report(
         )
 
     structure_total = None
-    if jev_scores is not None:
-        structure_total = render_jev_structure_section(console, jev_scores)
+    if structure_scores is not None:
+        structure_total = render_structure_section(console, structure_scores)
     else:
-        console.print(Panel(jev_skip_reason, title="Structure Quality (Jev)", border_style="yellow"))
+        console.print(
+            Panel(structure_skip_reason, title="Structure Quality (Code Metrics)", border_style="yellow")
+        )
 
     spec_total = None
     if spec_scores is not None:
-        spec_total = render_jev_spec_section(console, spec_scores)
+        spec_total = render_spec_section(console, spec_scores)
         flags += compute_spec_red_flags(
             spec_scores, spec_text or "", codebase_modules or [], red_flags_cfg
         )

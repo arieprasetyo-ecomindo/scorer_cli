@@ -2,12 +2,23 @@
 
 ## Overview
 
-**scorer_cli** is an automated hackathon submission scoring system. It scores code structure (via graph analysis + complexity metrics) and Spec-Driven Development quality using TypeSafe's **Jev** (System One), then generates readable markdown reports.
+**scorer_cli** is an automated hackathon submission scoring system. It scores code structure
+deterministically (graph analysis + complexity metrics, no LLM), scores Spec-Driven Development
+quality using TypeSafe's **Jev** (System One), and generates readable markdown reports.
+
+> **Note:** this doc predates some of the real implementation — see `README.md`'s Roadmap
+> section for what's actually built today vs. still planned (e.g. the CLI commands and
+> `metrics.json` reproducibility flow described further below aren't implemented yet; the only
+> real command is `score-cli report <team_name>`).
 
 **Pipeline:**
 1. **Metrics Collection** (local, deterministic) — Extract structural and complexity metrics
-2. **Jev Scoring** (structured judgment) — 2 Jev API calls → levels + thresholds + confidence
-3. **Report Generation** (deterministic + LLM prose) — Code computes scores, Claude writes markdown
+2. **Structure Scoring** (deterministic) — Classify all 6 structure dimensions against fixed
+   numeric thresholds in code, no API call
+3. **Spec Scoring** (Jev, structured judgment) — 1 Jev API call → Choice + Noul answers,
+   because judging prose genuinely requires judgment, unlike structure metrics
+4. **Report Generation** (deterministic + LLM prose) — Code computes weighted totals, Claude
+   writes a concise markdown summary
 
 ## Three-Phase Pipeline
 
@@ -23,11 +34,11 @@ flowchart TD
 
 **Output:** `metrics.json` with graph metrics + complexity metrics.
 
-### Phase 2: Jev Scoring (Structured Judgment)
+### Phase 2: Structure Scoring (Deterministic) + Spec Scoring (Jev)
 
 ```mermaid
 flowchart TD
-    IN["metrics.json + spec_text + codebase_modules"] --> S["Jev Call 1: Structure Scoring<br/>6 Score primitives (parallel), each a continuous 0-4 score + confidence"]
+    GM["graph_metrics + complexity_metrics"] --> S["app/structure_scorer.py<br/>classify all 6 dimensions against fixed numeric thresholds<br/>no API call, no cost, 100% reproducible"]
     S --> S1["Coupling"]
     S --> S2["Circular Dependencies"]
     S --> S3["Dependency Depth"]
@@ -35,7 +46,7 @@ flowchart TD
     S --> S5["Function Size"]
     S --> S6["Betweenness Centrality"]
 
-    IN --> P["Jev Call 2: Spec Scoring<br/>1 Choice + 5 Noul (parallel); Choice returns option+confidence, each Noul returns a single yes-probability"]
+    IN["spec_text + codebase_modules"] --> P["Jev Call: Spec Scoring<br/>1 Choice + 5 Noul (parallel); Choice returns option+confidence, each Noul returns a single yes-probability"]
     P --> P0["Weakest Dimension (Choice)"]
     P --> P1["Clarity & Testability"]
     P --> P2["Scope Boundary"]
@@ -43,15 +54,20 @@ flowchart TD
     P --> P4["Traceability"]
     P --> P5["Substance Over Polish"]
 
-    S1 & S2 & S3 & S4 & S5 & S6 & P0 & P1 & P2 & P3 & P4 & P5 --> OUT["scored_data.json<br/>(levels + thresholds + confidence)"]
+    S1 & S2 & S3 & S4 & S5 & S6 & P0 & P1 & P2 & P3 & P4 & P5 --> OUT["scored data<br/>(structure: score+level; spec: score+answer+confidence)"]
 ```
 
-**Cost:** ~4 min-tokens total. Calibrated by TypeSafe.
+**Why structure isn't judged by Jev:** every structure dimension already has an exact numeric
+rubric (`docs/spec/rubrics.md`) — e.g. "avg CCN <= 4 -> Excellent" is a lookup, not a judgment
+call. Spec quality is the one place Jev earns its keep, because judging unstructured prose (is
+this testable? does it contradict itself?) isn't something a threshold table can do.
 
-**Key trait:** Jev returns a confidence measure on every answer → judges know which scores are
-ambiguous. Score answers are continuous (a probability-weighted average across levels, not a
-discrete pick); Noul answers are a single yes-probability, from which code derives an answer
-and confidence (see `docs/design/spec-scoring.md`).
+**Cost:** ~1-2 min-tokens total (one Jev call, for spec only).
+
+**Key trait:** Jev returns a confidence measure on every spec answer → judges know which scores
+are ambiguous. Noul answers are a single yes-probability, from which code derives an answer and
+confidence (see `docs/design/spec-scoring.md`). Structure scores have no confidence value —
+they're computed, not judged.
 
 ### Phase 3: Report Generation (Deterministic + LLM Prose)
 
@@ -122,13 +138,15 @@ scorer_cli/                    # project directory
 │       └── sample-report.md    # Example output (for judges)
 │
 └── app/                        # Application code
-    ├── __main__.py             # CLI entry point
-    ├── scorer.py               # Main orchestration
-    ├── metrics.py              # Metrics collection
-    ├── jev_scorer.py           # Jev API calls (judgment)
-    ├── scoring_engine.py       # 0–10 score mapping + arithmetic
-    ├── llm_reporter.py         # Claude API calls (prose)
-    └── report_generator.py     # Markdown formatting + file I/O
+    ├── __main__.py             # CLI entry point + orchestration
+    ├── config.py               # Loads config.yaml
+    ├── metrics.py              # Graph metrics (NetworkX) + complexity metrics (Lizard) + spec text extraction
+    ├── structure_scorer.py     # Deterministic structure scoring (no API call)
+    ├── jev_scorer.py           # Jev API calls for spec/SDD scoring only
+    ├── llm_reporter.py         # Claude API call (narrative prose) + fallback
+    ├── chart_generator.py      # matplotlib score chart
+    ├── report_generator.py     # Rich terminal report + red-flag rules
+    └── report_writer.py        # Assembles the final markdown report
 ```
 
 Note: `pyproject.toml` and a formula reference (`design/scoring-math.md`) are not yet written — see `HANDOFF.md` for what's outstanding.
@@ -174,11 +192,10 @@ Note: `pyproject.toml` and a formula reference (`design/scoring-math.md`) are no
       "coupling": {
         "score_0_10": 7.5,
         "level": 3,
-        "level_label": "Good",
-        "confidence": 0.78
+        "level_label": "Good"
       },
-      // ... (all 6 dimensions; "level"/"level_label" are derived by rounding
-      // Jev's continuous 0-4 score, not returned directly by the API)
+      // ... (all 6 dimensions; computed deterministically in app/structure_scorer.py,
+      // no Jev call, no confidence value - see Phase 2 above)
     },
     "weighted_total": 7.8
   },
@@ -308,10 +325,12 @@ Low confidence on critical dimensions (e.g., cyclomatic complexity) → flag for
 4. Run on sample fixture: `uv run score-cli run fixtures/team-sample-001`
 
 **Key modules:**
-- `metrics.py` — NetworkX + Lizard (no changes needed)
-- `jev_scorer.py` — Jev questions & API calls
-- `scoring_engine.py` — 0–10 score mapping + weights
-- `llm_reporter.py` — Claude prose generation
-- `report_generator.py` — Markdown formatting
+- `metrics.py` — NetworkX + Lizard + spec text extraction
+- `structure_scorer.py` — deterministic structure scoring (thresholds, weights, no API)
+- `jev_scorer.py` — Jev questions & API calls for spec/SDD scoring only
+- `llm_reporter.py` — Claude narrative generation
+- `chart_generator.py` — score chart (matplotlib)
+- `report_generator.py` — Rich terminal report
+- `report_writer.py` — final markdown report
 
 See `design/` folder for implementation details.

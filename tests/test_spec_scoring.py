@@ -1,3 +1,4 @@
+import json
 import os
 from types import SimpleNamespace
 
@@ -12,6 +13,7 @@ from app.jev_scorer import (
     score_spec,
     score_spec_with_response,
     weighted_spec_total,
+    write_jev_log,
 )
 
 
@@ -115,6 +117,13 @@ def test_build_jev_log_captures_raw_spec_response():
     assert set(log["spec"]["answers"].keys()) == {f"{d}_met" for d in SPEC_NOUL_INSTRUCTIONS}
     assert log["spec"]["answers"]["clarity_testability_met"]["noul"] == 0.7
     assert "structure" not in log
+
+
+def test_write_jev_log_writes_json_file(tmp_path):
+    log = {"team": "x", "spec": {}}
+    path = write_jev_log(tmp_path, log)
+    assert path == tmp_path / "jev_log.json"
+    assert json.loads(path.read_text()) == log
 
 
 @pytest.mark.skipif(not os.environ.get("TYPESAFE_API_KEY"), reason="requires TYPESAFE_API_KEY")

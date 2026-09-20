@@ -5,7 +5,7 @@ import pytest
 
 from app.llm_reporter import build_prompt, generate_fallback_narrative, generate_narrative
 
-JEV_SCORES = {
+STRUCTURE_SCORES = {
     "coupling": {"score_0_10": 7.7},
     "circular_dependencies": {"score_0_10": 10.0},
     "dependency_depth": {"score_0_10": 9.8},
@@ -35,7 +35,7 @@ class FakeAnthropicClient:
 
 
 def test_build_prompt_includes_scores_and_flags():
-    prompt = build_prompt(JEV_SCORES, SPEC_SCORES, ["some red flag"])
+    prompt = build_prompt(STRUCTURE_SCORES, SPEC_SCORES, ["some red flag"])
     assert "coupling" in prompt
     assert "7.7" in prompt
     assert "some red flag" in prompt
@@ -48,13 +48,13 @@ def test_build_prompt_handles_missing_sections():
 
 def test_generate_narrative_calls_client_and_returns_text():
     client = FakeAnthropicClient("## Summary\n\nGood job.")
-    result = generate_narrative(JEV_SCORES, None, [], client, model="claude-opus-5")
+    result = generate_narrative(STRUCTURE_SCORES, None, [], client, model="claude-opus-5")
     assert result == "## Summary\n\nGood job."
     assert client.last_call["model"] == "claude-opus-5"
 
 
 def test_generate_fallback_narrative_has_scores_no_llm():
-    text = generate_fallback_narrative(JEV_SCORES, None)
+    text = generate_fallback_narrative(STRUCTURE_SCORES, None)
     assert "LLM unavailable" in text
     assert "Structure weighted total" in text
 
@@ -64,6 +64,6 @@ def test_live_smoke_against_real_anthropic_api():
     from anthropic import Anthropic
 
     client = Anthropic()
-    result = generate_narrative(JEV_SCORES, SPEC_SCORES, ["example flag"], client)
+    result = generate_narrative(STRUCTURE_SCORES, SPEC_SCORES, ["example flag"], client)
     assert isinstance(result, str)
     assert len(result) > 0

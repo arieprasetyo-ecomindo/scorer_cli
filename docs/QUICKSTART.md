@@ -58,13 +58,12 @@ Reports are markdown files in `reports/`:
 
 ## Structure Quality (Code Metrics)
 
-| Dimension | Weight | Score | Jev Level | Confidence |
-|---|---|---|---|---|
-| Coupling | 21% | 7.5 / 10 | 4 (Good) | 78% |
-| [5 more structure dimensions...] | | | | |
+Scored deterministically from metrics (no Jev/LLM call, no confidence value):
 
-#### Coupling
-[2–3 sentences from Claude]
+| Dimension | Weight | Score | Level |
+|---|---|---|---|
+| Coupling | 21% | 7.5 / 10 | 3 (Good) |
+| [5 more structure dimensions...] | | | |
 
 ## Spec Quality (SDD Scoring)
 
@@ -85,9 +84,9 @@ Reports are markdown files in `reports/`:
 
 Each dimension has:
 - **Score:** 0–10 rating
-- **Jev Level:** 1–5 (Critical → Excellent)
-- **Confidence:** 0–1 (how sure Jev is)
-- **Justification:** Claude's explanation
+- **Level:** 0–4 (Critical → Excellent)
+- **Confidence:** 0–1 (spec dimensions only — how sure Jev is; structure has no confidence
+  since it's computed, not judged)
 
 **Low confidence = ambiguous signal → flag for manual review by judges.**
 

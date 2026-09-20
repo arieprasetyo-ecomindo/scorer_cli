@@ -4,21 +4,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.chart_generator import generate_score_chart
-from app.jev_scorer import (
-    SPEC_WEIGHTS,
-    STRUCTURE_WEIGHTS,
-    weighted_spec_total,
-    weighted_structure_total,
-)
+from app.jev_scorer import SPEC_WEIGHTS, weighted_spec_total
+from app.structure_scorer import STRUCTURE_WEIGHTS, weighted_structure_total
 
 
-def _structure_table_md(jev_scores: dict) -> str:
-    lines = ["| Dimension | Weight | Score | Jev Level | Confidence |", "|---|---|---|---|---|"]
+def _structure_table_md(structure_scores: dict) -> str:
+    lines = ["| Dimension | Weight | Score | Level |", "|---|---|---|---|"]
     for dim, weight in STRUCTURE_WEIGHTS.items():
-        a = jev_scores[dim]
+        a = structure_scores[dim]
         lines.append(
             f"| {dim.replace('_', ' ').title()} | {weight:.0%} | {a['score_0_10']:.1f} / 10 "
-            f"| {a['level']} ({a['level_label']}) | {a['confidence']:.0%} |"
+            f"| {a['level']} ({a['level_label']}) |"
         )
     return "\n".join(lines)
 
@@ -37,7 +33,7 @@ def _spec_table_md(spec_scores: dict) -> str:
 def write_markdown_report(
     team_name: str,
     output_dir: str | Path,
-    jev_scores: dict | None,
+    structure_scores: dict | None,
     spec_scores: dict | None,
     narrative_md: str,
     red_flags: list[str],
@@ -51,17 +47,17 @@ def write_markdown_report(
     sections.append("")
 
     structure_total = spec_total = None
-    if jev_scores or spec_scores:
+    if structure_scores or spec_scores:
         chart_filename = f"{team_name}_chart.png"
-        generate_score_chart(team_name, jev_scores, spec_scores, output_dir / chart_filename)
+        generate_score_chart(team_name, structure_scores, spec_scores, output_dir / chart_filename)
         sections += [f"![Score Breakdown]({chart_filename})", ""]
 
-    if jev_scores:
-        structure_total = weighted_structure_total(jev_scores)
+    if structure_scores:
+        structure_total = weighted_structure_total(structure_scores)
         sections += [
             "## Structure Quality (Code Metrics)",
             "",
-            _structure_table_md(jev_scores),
+            _structure_table_md(structure_scores),
             "",
             f"**Structure Weighted Total: {structure_total:.1f} / 10**",
             "",

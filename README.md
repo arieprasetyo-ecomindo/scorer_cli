@@ -5,18 +5,25 @@ Automated hackathon submission scoring: code structure + Spec-Driven Development
 ## What It Does
 
 Scores a team's submission using:
-- **Jev** (TypeSafe System One) for structured judgment on code structure and spec quality
+- **NetworkX** + **Lizard** for local, deterministic code structure metrics
+- **Jev** (TypeSafe System One) for spec/SDD quality — judgment on unstructured prose, where a
+  deterministic rule genuinely can't do the job
 - **Claude** (Anthropic) for a concise, score-focused narrative summary
-- **NetworkX** + **Lizard** for the local, deterministic metrics that feed Jev
+
+Structure is scored by code, not Jev: every structure dimension already has an exact numeric
+rubric (`docs/spec/rubrics.md`), so classifying it is a threshold lookup, not a judgment call —
+free, instant, 100% reproducible. Spec quality is different: judging whether requirements are
+testable or a spec contradicts itself requires reading prose, which is what Jev is for.
 
 **Pipeline:**
 1. Parse `graph.json` (Graphify output) → file-level dependency graph → graph metrics (coupling, cycles, depth, betweenness) via NetworkX
 2. Extract `source.zip` → complexity metrics (cyclomatic complexity, function size) via Lizard
-3. Extract `sdd.zip` → concatenated spec text (framework-agnostic — works with OpenSpec, a plain `SPEC.md`, ADRs, anything)
-4. Ask Jev to judge structure (6 Score dimensions) and spec quality (1 Choice + 5 Noul dimensions)
-5. Rescale Jev's answers to 0–10, apply weights from `config.yaml`, compute a combined score
-6. Ask Claude for a short narrative summary (falls back to a scores-only summary if the call fails)
-7. Render a Rich-formatted report in the terminal, a chart (`matplotlib`), and a markdown report to disk
+3. Classify all 6 structure dimensions against fixed thresholds in code (`app/structure_scorer.py`) — no API call
+4. Extract `sdd.zip` → concatenated spec text (framework-agnostic — works with OpenSpec, a plain `SPEC.md`, ADRs, anything)
+5. Ask Jev to judge spec quality (1 Choice + 5 Noul dimensions)
+6. Apply weights from `config.yaml`, compute a combined score
+7. Ask Claude for a short narrative summary (falls back to a scores-only summary if the call fails)
+8. Render a Rich-formatted report in the terminal, a chart (`matplotlib`), and a markdown report to disk
 
 ## Get Started
 
@@ -40,7 +47,8 @@ uv run score-cli report sample_team_phoenix
 This prints a full Rich-formatted report to the terminal and writes:
 - `reports/sample_team_phoenix.md` — the markdown report (chart + score tables + narrative)
 - `reports/sample_team_phoenix_chart.png` — the score chart embedded in that report
-- `fixtures/sample_team_phoenix/jev_log.json` — the raw Jev response (for judge auditability)
+- `fixtures/sample_team_phoenix/jev_log.json` — the raw Jev response for spec scoring (for judge
+  auditability — structure scoring is deterministic code, so there's nothing to log for it)
 
 Missing `source.zip`, `sdd.zip`, or an API key doesn't crash the run — each stage is skipped
 with a clear reason shown in its place, and whatever's available still gets scored.
@@ -55,7 +63,7 @@ All documentation lives in [`docs/`](docs/) — see [docs/INDEX.md](docs/INDEX.m
 | **docs/QUICKSTART.md** | Users, judges | Get started in 5 minutes |
 | **docs/ARCHITECTURE.md** | Architects, leads | System design, 3-phase pipeline, data structures |
 | **docs/DEVELOPER_CHECKLIST.md** | Developers | Step-by-step implementation guide |
-| **docs/design/structure-scoring.md** | Developers | 6 Score primitives for code (detailed) |
+| **docs/design/structure-scoring.md** | Developers | Deterministic structure scoring rules (detailed) |
 | **docs/design/spec-scoring.md** | Developers | Choice + 5 Noul for spec (detailed) |
 | **docs/design/report-generation.md** | Developers | LLM prompt, fallback, markdown validation |
 | **docs/spec/rubrics.md** | Judges, developers | Complete rubric reference (11 dimensions) |
@@ -92,7 +100,8 @@ scorer_cli/
 │   ├── __main__.py               CLI entry point
 │   ├── config.py                 Loads config.yaml
 │   ├── metrics.py                Graph metrics (NetworkX) + complexity metrics (Lizard) + spec text extraction
-│   ├── jev_scorer.py              Jev API calls: structure (Score) + spec (Choice/Noul) scoring, weights, logging
+│   ├── structure_scorer.py        Deterministic structure scoring (no API call)
+│   ├── jev_scorer.py              Jev API calls for spec (Choice/Noul) scoring only
 │   ├── llm_reporter.py            Claude API call for the narrative summary + fallback
 │   ├── chart_generator.py         matplotlib score chart (also runnable standalone)
 │   ├── report_generator.py        Rich terminal report + red-flag rules
@@ -165,12 +174,15 @@ red_flags:                  # thresholds used by the red-flag checks
 Not yet wired up (present in `config.yaml.example` but currently ignored): `typesafe.*`
 (the SDK reads `TYPESAFE_API_KEY`/model defaults directly), `max_retries`/`retry_delay_seconds`
 on either API, `spec_rubric.*.threshold`, `batch.*`, `logging.*`. Per-dimension *weights* for
-structure (21/17/13/21/13/15%) and spec (25/15/15/25/20%) are hardcoded in `app/jev_scorer.py`,
-not read from `config.yaml`.
+structure (21/17/13/21/13/15%) are hardcoded in `app/structure_scorer.py`, and spec
+(25/15/15/25/20%) in `app/jev_scorer.py` — neither is read from `config.yaml`. Structure's
+classification thresholds themselves (e.g. "avg CCN <= 4 -> Excellent") are also hardcoded in
+`app/structure_scorer.py`, not configurable via `config.yaml` today.
 
 Real API notes worth knowing if you edit this file:
 - `typesafe.model` must be `"jev-latest"` (or a pinned version) — the real `typesafe-sdk`
-  rejects the bare name `"jev"`.
+  rejects the bare name `"jev"`. (Only used for spec scoring now — structure scoring never
+  calls Jev.)
 - There is no `temperature` field for `report_generation` — the real `anthropic-sdk` (checked
   at v1.6.0) doesn't have that parameter anymore.
 
@@ -180,7 +192,7 @@ Real API notes worth knowing if you edit this file:
 fixtures/
   <team_name>/
     graph.json      (dependency graph from Graphify — required)
-    source.zip       (source code — optional; skips complexity + structure Jev scoring if absent)
+    source.zip       (source code — optional; skips complexity + structure scoring if absent)
     sdd.zip           (spec documents — optional; skips spec Jev scoring if absent)
 ```
 
@@ -188,7 +200,7 @@ fixtures/
 
 Running `report` prints a full Rich terminal report (graph metrics, complexity metrics,
 Structure/Spec Quality tables with inline score bars, a combined-score meter, and red flags),
-and — whenever there's at least one Jev score to report — writes to disk:
+and — whenever there's at least one score (structure or spec) to report — writes to disk:
 
 ```
 reports/
@@ -196,28 +208,34 @@ reports/
   <team_name>_chart.png    (score chart, embedded in the .md above)
 
 fixtures/<team_name>/
-  jev_log.json             (raw Jev response: model, token usage, per-dimension scores/confidence/probabilities)
+  jev_log.json             (raw Jev response for spec scoring only: model, token usage,
+                             per-dimension answers. Not written if sdd.zip/API key is missing;
+                             structure scoring never produces one, since it never calls Jev.)
 ```
 
-Example report: `docs/examples/sample-report.md` (illustrative — written before the real
-implementation, so exact formatting may differ slightly from what `report` produces today).
+Example report: `docs/examples/sample-report.md` (illustrative, kept in sync with `report_writer.py`'s actual output format).
 
 ## Roadmap
 
 **Done:**
 - ✅ Graph metrics (NetworkX) from Graphify's `graph.json`
 - ✅ Complexity metrics (Lizard) from `source.zip`
+- ✅ Deterministic structure scoring (6 dimensions, fixed thresholds, no API call — see
+  `app/structure_scorer.py`)
 - ✅ Framework-agnostic spec text extraction from `sdd.zip`
-- ✅ Jev structure scoring (6 Score primitives)
-- ✅ Jev spec/SDD scoring (1 Choice + 5 Noul primitives)
+- ✅ Jev spec/SDD scoring (1 Choice + 5 Noul primitives) — the one place an LLM judgment
+  call is actually needed
 - ✅ `config.yaml`-driven weights, spec score ranges, and red-flag thresholds
 - ✅ Structure + spec red flags
-- ✅ Raw Jev response logging (`jev_log.json`) for judge auditability
+- ✅ Raw Jev response logging (`jev_log.json`, spec only) for judge auditability
 - ✅ Claude narrative summary, with a scores-only fallback if the API call fails
 - ✅ matplotlib score chart + Rich terminal bars, embedded in the markdown report
 - ✅ End-to-end tests (mocked clients for CI + live smoke tests gated on real API keys)
 
 **Not yet done:**
+- ⬜ Betweenness centrality's rubric caveat ("entry points like `server.js`/`main` naturally
+  have high betweenness, don't penalize") isn't implemented — the deterministic classifier
+  scores purely on the max/avg ratio, no filename heuristic
 - ⬜ Batch mode (`run-all` across every folder in `fixtures/`)
 - ⬜ `metrics.json` persistence + a `recompute` command (re-score from cached metrics without
   new API calls when you only change `config.yaml` weights)

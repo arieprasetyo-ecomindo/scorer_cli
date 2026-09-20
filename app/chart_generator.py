@@ -1,4 +1,4 @@
-"""Render a bar chart of Jev structure + spec scores for the markdown report.
+"""Render a bar chart of structure + spec scores for the markdown report.
 
 Also runnable standalone for a quick visual check of the chart style:
     uv run python -m app.chart_generator
@@ -11,7 +11,8 @@ import matplotlib
 matplotlib.use("Agg")  # headless: no display needed to write a PNG
 import matplotlib.pyplot as plt
 
-from app.jev_scorer import SPEC_WEIGHTS, STRUCTURE_WEIGHTS
+from app.jev_scorer import SPEC_WEIGHTS
+from app.structure_scorer import STRUCTURE_WEIGHTS
 
 LOW_COLOR = "#d64545"  # < 4: needs work
 MID_COLOR = "#e0a72e"  # 4-7: fair
@@ -48,7 +49,7 @@ def _plot_dimensions(ax, dims: dict[str, float], title: str) -> None:
 
 def generate_score_chart(
     team_name: str,
-    jev_scores: dict | None,
+    structure_scores: dict | None,
     spec_scores: dict | None,
     output_path: str | Path,
 ) -> Path:
@@ -56,9 +57,9 @@ def generate_score_chart(
     output_path = Path(output_path)
 
     sections = []
-    if jev_scores:
+    if structure_scores:
         sections.append(
-            ("Structure Quality", {d: jev_scores[d]["score_0_10"] for d in STRUCTURE_WEIGHTS})
+            ("Structure Quality", {d: structure_scores[d]["score_0_10"] for d in STRUCTURE_WEIGHTS})
         )
     if spec_scores:
         sections.append(
@@ -84,7 +85,7 @@ def generate_score_chart(
 
 
 if __name__ == "__main__":
-    demo_jev_scores = {
+    demo_structure_scores = {
         "coupling": {"score_0_10": 7.7},
         "circular_dependencies": {"score_0_10": 10.0},
         "dependency_depth": {"score_0_10": 9.8},
@@ -99,5 +100,5 @@ if __name__ == "__main__":
         "traceability": {"score_0_10": 2.4},
         "substance_over_polish": {"score_0_10": 8.8},
     }
-    path = generate_score_chart("demo_team", demo_jev_scores, demo_spec_scores, "demo_chart.png")
+    path = generate_score_chart("demo_team", demo_structure_scores, demo_spec_scores, "demo_chart.png")
     print(f"Wrote {path}")

@@ -2,7 +2,7 @@ import pytest
 
 from app.chart_generator import _score_color, generate_score_chart
 
-JEV_SCORES = {
+STRUCTURE_SCORES = {
     "coupling": {"score_0_10": 7.7},
     "circular_dependencies": {"score_0_10": 10.0},
     "dependency_depth": {"score_0_10": 9.8},
@@ -25,13 +25,13 @@ def test_score_color_tiers():
 
 
 def test_generate_chart_with_both_sections(tmp_path):
-    path = generate_score_chart("team-x", JEV_SCORES, SPEC_SCORES, tmp_path / "chart.png")
+    path = generate_score_chart("team-x", STRUCTURE_SCORES, SPEC_SCORES, tmp_path / "chart.png")
     assert path.exists()
     assert path.stat().st_size > 0
 
 
 def test_generate_chart_structure_only(tmp_path):
-    path = generate_score_chart("team-x", JEV_SCORES, None, tmp_path / "chart.png")
+    path = generate_score_chart("team-x", STRUCTURE_SCORES, None, tmp_path / "chart.png")
     assert path.exists()
 
 

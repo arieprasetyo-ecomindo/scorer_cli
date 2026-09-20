@@ -15,6 +15,7 @@ from app.metrics import (
     load_graph,
 )
 from app.report_generator import compute_all_red_flags, render_report
+from app.structure_scorer import score_structure
 
 FIXTURES_DIR = Path("fixtures")
 REPORTS_DIR = Path("reports")
@@ -42,50 +43,31 @@ def report(team_name: str) -> None:
     sdd_zip = team_dir / "sdd.zip"
     spec_text = extract_spec_text_from_zip(sdd_zip) if sdd_zip.exists() else None
 
-    have_key = bool(os.environ.get("TYPESAFE_API_KEY"))
-    structure_response = spec_response = None
-    jev_scores = spec_scores = None
-    jev_skip_reason = "No TYPESAFE_API_KEY found."
-    spec_skip_reason = "No TYPESAFE_API_KEY found."
+    # Structure scoring is pure code - deterministic, no API call, no cost.
+    structure_scores = None
+    structure_skip_reason = "No source.zip found — complexity metrics needed for structure scoring."
+    if complexity_metrics is not None:
+        structure_scores = score_structure(graph_metrics, complexity_metrics)
 
-    if complexity_metrics is None:
-        jev_skip_reason = "No source.zip found — complexity metrics needed for Jev scoring."
+    # Spec scoring is the one place Jev is actually used (judging prose).
+    spec_scores = None
+    spec_response = None
+    spec_skip_reason = "No TYPESAFE_API_KEY found."
     if spec_text is None:
         spec_skip_reason = "No sdd.zip found — spec text needed for Jev scoring."
-
-    if have_key and (complexity_metrics is not None or spec_text is not None):
+    elif os.environ.get("TYPESAFE_API_KEY"):
         from typesafe_sdk import TypeSafeAPIError, TypeSafeClient
 
-        from app.jev_scorer import (
-            build_jev_log,
-            score_spec_with_response,
-            score_structure_with_response,
-            write_jev_log,
-        )
+        from app.jev_scorer import build_jev_log, score_spec_with_response, write_jev_log
 
-        client = TypeSafeClient()
-
-        if complexity_metrics is not None:
-            try:
-                jev_scores, structure_response = score_structure_with_response(
-                    graph_metrics, complexity_metrics, client
-                )
-            except TypeSafeAPIError as e:
-                jev_skip_reason = f"Jev scoring failed: {e}"
-
-        if spec_text is not None:
-            try:
-                spec_scores, spec_response = score_spec_with_response(
-                    spec_text, codebase_modules, client, config.get("spec_rubric")
-                )
-            except TypeSafeAPIError as e:
-                spec_skip_reason = f"Jev scoring failed: {e}"
-
-        if structure_response is not None or spec_response is not None:
-            log_path = write_jev_log(
-                team_dir, build_jev_log(team_name, structure_response, spec_response)
+        try:
+            spec_scores, spec_response = score_spec_with_response(
+                spec_text, codebase_modules, TypeSafeClient(), config.get("spec_rubric")
             )
+            log_path = write_jev_log(team_dir, build_jev_log(team_name, spec_response))
             print(f"Jev response logged to {log_path}")
+        except TypeSafeAPIError as e:
+            spec_skip_reason = f"Jev scoring failed: {e}"
 
     render_report(
         Console(),
@@ -93,15 +75,15 @@ def report(team_name: str) -> None:
         graph_metrics,
         config,
         complexity_metrics,
-        jev_scores,
-        jev_skip_reason,
+        structure_scores,
+        structure_skip_reason,
         spec_scores,
         spec_text,
         codebase_modules,
         spec_skip_reason,
     )
 
-    if jev_scores is not None or spec_scores is not None:
+    if structure_scores is not None or spec_scores is not None:
         red_flags_cfg = config.get("red_flags", {})
         flags = compute_all_red_flags(
             graph_metrics, complexity_metrics, spec_scores, spec_text, codebase_modules, red_flags_cfg
@@ -116,7 +98,7 @@ def report(team_name: str) -> None:
 
             try:
                 narrative = generate_narrative(
-                    jev_scores,
+                    structure_scores,
                     spec_scores,
                     flags,
                     Anthropic(),
@@ -125,18 +107,18 @@ def report(team_name: str) -> None:
                 )
             except APIError as e:
                 print(f"Claude narrative generation failed ({e}); using fallback summary.")
-                narrative = generate_fallback_narrative(jev_scores, spec_scores)
+                narrative = generate_fallback_narrative(structure_scores, spec_scores)
         else:
             from app.llm_reporter import generate_fallback_narrative
 
-            narrative = generate_fallback_narrative(jev_scores, spec_scores)
+            narrative = generate_fallback_narrative(structure_scores, spec_scores)
 
         from app.report_writer import write_markdown_report
 
         report_path = write_markdown_report(
             team_name,
             REPORTS_DIR,
-            jev_scores,
+            structure_scores,
             spec_scores,
             narrative,
             flags,

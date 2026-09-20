@@ -1,161 +1,142 @@
-# Structure Scoring: 6 Jev Score Primitives
+# Structure Scoring: Deterministic, No Jev
 
-This document defines the 6 **Score** primitives used to judge code structure quality.
+This document defines how the 6 structure (code quality) dimensions are scored.
 
-## Overview
+## Why Not Jev?
 
-Each dimension has 5 rubric levels, Critical → Excellent. Via the real `typesafe-sdk`
-package, each is a `Score` question whose `criteria` is an ordered list of 5 level
-descriptions, indexed 0 (Critical) through 4 (Excellent) — the SDK is zero-indexed,
-not 1–5.
+Every one of these 6 dimensions already has an exact numeric rubric (see `docs/spec/rubrics.md`)
+— e.g. "avg CCN <= 4 -> Excellent" is a lookup-table classification, not a judgment call. Running
+that through an LLM/Jev added cost, latency, an external dependency, and non-reproducibility for
+no real benefit. Jev is reserved for `docs/design/spec-scoring.md`'s Spec Quality dimensions,
+where the input is unstructured prose and genuine judgment is actually required.
 
-Jev's `ScoreAnswer` returns:
-- **`score`** (float): a *continuous*, probability-weighted average over the 5
-  levels (e.g. `3.4`, not a single picked level)
-- **`confidence`** (float, 0–1): a separate certainty measure
-- **`legend`** (`dict[int, str]`): the criteria text, keyed by level index
-- **`probabilities`** (`dict[int, float]`): likelihood of each level
+See `app/structure_scorer.py` for the implementation — this doc mirrors it.
 
-Code rescales `score` (0..4) to 0..10 for reporting:
-`score_0_10 = score / (num_levels - 1) * 10` — e.g. `score=4` → `10`, `score=2` → `5`.
-For display, we also derive a nearest integer level via `round(score)` and label it
-from `legend`, but the underlying value used for weighting is the continuous score,
-not the rounded level.
+## How It Works
 
-See `app/jev_scorer.py` for the implementation.
+Each dimension has 5 levels, indexed 0 (Critical) through 4 (Excellent). A classifier function
+buckets the relevant metric(s) into one of those 5 levels using fixed thresholds, then:
 
-## Input State
+```
+score_0_10 = level / 4 * 10   # 0, 2.5, 5, 7.5, or 10 - a discrete bucket, not interpolated
+```
 
-All 6 questions receive the same state:
+Discrete buckets (rather than interpolating within a level) are deliberate: it keeps scoring
+fully transparent and auditable — anyone can look at a metric value and the threshold table and
+know exactly which bucket it falls into and why.
 
-```json
-{
-  "submission_id": "string",
-  "graph_metrics": {
-    "node_count": number,
-    "avg_fan_in": number,
-    "max_fan_in": number,
-    "avg_fan_out": number,
-    "max_fan_out": number,
-    "longest_dependency_path": number,
-    "circular_dependencies": [["moduleA", "moduleB", "moduleA"], ...],
-    "modularity_score": number,
-    "avg_betweenness_centrality": number,
-    "max_betweenness_centrality": number,
-    "top_betweenness_nodes": [{"node": "string", "betweenness": number}, ...]
-  },
-  "complexity_metrics": {
-    "total_functions": number,
-    "avg_cyclomatic_complexity": number,
-    "max_cyclomatic_complexity": number,
-    "functions_above_complexity_threshold": [
-      {"name": "string", "file": "string", "ccn": number, "nloc": number}, ...
-    ],
-    "avg_function_length_nloc": number,
-    "avg_parameter_count": number
-  }
-}
+There's no "confidence" value for structure scores, unlike spec scores — a deterministic rule
+has no genuine uncertainty to report. Fabricating one (e.g. always 100%) would be misleading.
+
+## Input
+
+Each classifier reads directly from `graph_metrics` (NetworkX) and/or `complexity_metrics`
+(Lizard) — see `app/metrics.py`. No combined "state" object or API call is needed.
+
+---
+
+## 1. Coupling
+
+**Function:** `score_coupling(graph_metrics)`
+
+```
+avg_val = max(avg_fan_in, avg_fan_out)
+max_val = max(max_fan_in, max_fan_out)
+ratio = max_val / avg_val   (0 if avg_val == 0)
+
+if avg_val > 2.5: level = 0        # Critical, regardless of ratio
+elif ratio <= 2:  level = 4        # Excellent
+elif ratio <= 4:  level = 3        # Good
+elif ratio <= 7:  level = 2        # Fair
+elif ratio <= 10: level = 1        # Poor
+else:             level = 0        # Critical
 ```
 
 ---
 
-## Question 1: Coupling
+## 2. Circular Dependencies
 
-**ID:** `coupling`
+**Function:** `score_circular_dependencies(graph_metrics)`
 
-**Criteria** (index: label):
-- **4 (Excellent):** max fan-in/out within ~2× average (no hotspots)
-- **3 (Good):** One or two hotspot nodes (3–4× avg); not dominant
-- **2 (Fair):** Several hotspots (5–7× avg); some god-modules
-- **1 (Poor):** Pervasive high coupling (max fan-in/out > 7× avg)
-- **0 (Critical):** Tangled mess (max fan-in/out > 10× avg)
+```
+count = len(circular_dependencies)
 
-**Key metrics:** `avg_fan_in`, `max_fan_in`, `avg_fan_out`, `max_fan_out`
-
----
-
-## Question 2: Circular Dependencies
-
-**ID:** `circular_dependencies`
-
-**Criteria** (index: label):
-- **4 (Excellent):** Zero cycles
-- **3 (Good):** 1 isolated cycle (non-core area)
-- **2 (Fair):** 2–3 cycles
-- **1 (Poor):** 4–6 cycles
-- **0 (Critical):** >6 cycles or spanning multiple core modules
-
-**Key metric:** `circular_dependencies` array length
+count == 0:        level = 4  # Excellent
+count == 1:        level = 3  # Good
+2 <= count <= 3:   level = 2  # Fair
+4 <= count <= 6:   level = 1  # Poor
+count > 6:         level = 0  # Critical
+```
 
 ---
 
-## Question 3: Dependency Depth
+## 3. Dependency Depth
 
-**ID:** `dependency_depth`
+**Function:** `score_dependency_depth(graph_metrics)`
 
-**Criteria** (index: label):
-- **4 (Excellent):** Longest path ≤ log(node_count) × 2 (baseline)
-- **3 (Good):** Path 1.5–2× baseline
-- **2 (Fair):** Path 2–4× baseline
-- **1 (Poor):** Path 4–6× baseline
-- **0 (Critical):** Path >> baseline (spaghetti-like)
+```
+baseline = ln(node_count) * 2   (1 if node_count <= 1)
+ratio = longest_dependency_path / baseline
 
-**Key metrics:** `longest_dependency_path`, `node_count`
-
-**Example:** 87 nodes → baseline ≈ log(87)×2 ≈ 8.5. Path of 5 is good (index 3). Path of 15 is poor (index 1).
-
----
-
-## Question 4: Cyclomatic Complexity
-
-**ID:** `cyclomatic_complexity`
-
-**Criteria** (index: label):
-- **4 (Excellent):** avg CCN ≤ 4, no function above 10
-- **3 (Good):** avg CCN 4–7, < 5% above threshold (CCN > 10)
-- **2 (Fair):** avg CCN 7–12, or 5–15% above threshold
-- **1 (Poor):** avg CCN > 12 or > 15% above threshold
-- **0 (Critical):** avg CCN >> 15 + max CCN > 20
-
-**Key metrics:** `avg_cyclomatic_complexity`, `max_cyclomatic_complexity`, `functions_above_complexity_threshold` (count & percentage)
+ratio <= 1: level = 4   # Excellent
+ratio <= 2: level = 3   # Good
+ratio <= 4: level = 2   # Fair
+ratio <= 6: level = 1   # Poor
+else:       level = 0   # Critical
+```
 
 ---
 
-## Question 5: Function Size Discipline
+## 4. Cyclomatic Complexity
 
-**ID:** `function_size_discipline`
+**Function:** `score_cyclomatic_complexity(complexity_metrics)`
 
-**Criteria** (index: label):
-- **4 (Excellent):** avg NLOC ≤ 20, avg params ≤ 3
-- **3 (Good):** avg NLOC 20–40, avg params 3–4
-- **2 (Fair):** avg NLOC 40–70, avg params 4–6
-- **1 (Poor):** avg NLOC > 70 or avg params > 6
-- **0 (Critical):** avg NLOC >> 100 or avg params >> 8
+```
+pct_above = count(functions_above_complexity_threshold) / total_functions * 100  (0 if no functions)
 
-**Key metrics:** `avg_function_length_nloc`, `avg_parameter_count`
+level_from_avg:  avg_ccn<=4 -> 4, <=7 -> 3, <=12 -> 2, <=15 -> 1, else 0
+level_from_pct:  pct==0 -> 4, <5 -> 3, <15 -> 2, <25 -> 1, else 0
+
+level = min(level_from_avg, level_from_pct)   # the worse signal wins
+```
 
 ---
 
-## Question 6: Betweenness Centrality (Architectural Bottlenecks)
+## 5. Function Size Discipline
 
-**ID:** `betweenness_centrality`
+**Function:** `score_function_size_discipline(complexity_metrics)`
 
-**Criteria** (index: label):
-- **4 (Excellent):** max/avg ratio < 3 (no single point of failure)
-- **3 (Good):** ratio 3–6; top nodes plausibly legitimate (server.js, main, router)
-- **2 (Fair):** ratio 6–15; pronounced bottleneck
-- **1 (Poor):** ratio 15–30 or multiple nodes at 10–15×
-- **0 (Critical):** ratio > 30× or severe multi-node bottlenecks
+```
+level_from_nloc:   avg_nloc<=20 -> 4, <=40 -> 3, <=70 -> 2, <=100 -> 1, else 0
+level_from_params: avg_params<=3 -> 4, <=4 -> 3, <=6 -> 2, <=8 -> 1, else 0
 
-**Important caveat:** Entry points (server.js, main) naturally have high betweenness. Check node *names* — if legitimate role, don't penalize.
+level = min(level_from_nloc, level_from_params)   # the worse signal wins
+```
 
-**Key metrics:** `max_betweenness_centrality`, `avg_betweenness_centrality`, `top_betweenness_nodes`
+---
+
+## 6. Betweenness Centrality
+
+**Function:** `score_betweenness_centrality(graph_metrics)`
+
+```
+ratio = max_betweenness_centrality / avg_betweenness_centrality   (0 if avg == 0)
+
+ratio <= 3:  level = 4   # Excellent
+ratio <= 6:  level = 3   # Good
+ratio <= 15: level = 2   # Fair
+ratio <= 30: level = 1   # Poor
+else:        level = 0   # Critical
+```
+
+**Known simplification:** the rubric's caveat ("entry points like `server.js`/`main` naturally
+have high betweenness — check node names before penalizing") is not implemented. This classifier
+scores purely on the ratio; it doesn't special-case filenames. Worth revisiting if this causes
+false positives on real submissions.
 
 ---
 
 ## Weights
-
-Applied after all 6 questions return:
 
 ```yaml
 weights:
@@ -167,69 +148,16 @@ weights:
   betweenness_centrality: 0.15
 ```
 
-**Weighted Total Formula:**
 ```
-score_0_10_i = raw_score_i / (num_levels - 1) * 10   # raw_score_i is Jev's continuous 0..4 score
 structure_score = Σ(score_0_10_i × weight_i)
 ```
 
----
-
 ## Red Flags
 
-Automatically checked (not via Jev) after scoring:
+Checked separately in `app/report_generator.py`, using thresholds from `config.yaml`'s
+`red_flags` section (not hardcoded):
 
-- **Circular dependency > 3 modules:** Check `circular_dependencies` list
-- **Function CCN > 20:** Check `functions_above_complexity_threshold`
-- **Node fan-in/out > 5× avg:** Check `max_fan_in/out` vs. `avg_fan_in/out`
-- **Betweenness centrality > 10× avg:** Check `max_betweenness_centrality` vs. `avg_betweenness_centrality`
-
----
-
-## Implementation Example
-
-Real package: `typesafe-sdk` (`uv add typesafe-sdk`). Note `typesafe` on PyPI is an
-unrelated package — do not install it.
-
-```python
-from typesafe_sdk import Score, TypeSafeClient
-
-client = TypeSafeClient()  # reads TYPESAFE_API_KEY; model defaults to "jev-latest"
-
-questions = {
-    "coupling": Score(
-        instructions="Rate the coupling of this codebase using graph_metrics in state.",
-        criteria=[
-            "Critical: tangled mess (max > 10x avg)",       # index 0
-            "Poor: pervasive high coupling (max > 7x avg)",  # index 1
-            "Fair: several hotspots (5-7x avg)",             # index 2
-            "Good: one or two hotspots (3-4x avg)",          # index 3
-            "Excellent: low, even coupling (~2x avg)",       # index 4
-        ],
-    ),
-    # ... (5 more Score questions, same shape)
-}
-
-response = client.system_one(metrics_state, questions)
-
-for dim, answer in response.scores.items():
-    score_0_10 = answer.score / (len(questions[dim].criteria) - 1) * 10
-    print(f"{dim}: raw={answer.score:.2f} confidence={answer.confidence:.0%} -> {score_0_10:.1f}/10")
-```
-
-See `app/jev_scorer.py` for the actual implementation (`score_structure()`).
-
----
-
-## Debugging Low Confidence
-
-If Jev returns low confidence on a dimension:
-
-- **Coupling:** Check if node has legitimate high fan-in (library, middleware) vs. architectural accident
-- **Circular Dependencies:** Ambiguous if cycles touch both core and non-core modules
-- **Dependency Depth:** Ambiguous if mixed layering (some deep, some shallow paths)
-- **Cyclomatic Complexity:** Ambiguous if one outlier function inflates average
-- **Function Size:** Ambiguous if mix of tiny and large functions
-- **Betweenness:** Ambiguous if top nodes have mixed roles
-
-**Action:** Flag low-confidence dimensions for judge manual review.
+- Circular dependency touching more than `circular_deps_involving_more_than` modules
+- Function CCN above `max_ccn_threshold`
+- Node fan-in/out above `fan_coupling_multiple` × average
+- Node betweenness above `betweenness_multiple` × average

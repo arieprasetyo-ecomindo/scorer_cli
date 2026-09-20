@@ -2,6 +2,12 @@
 
 This is the unified rubric reference for all 11 scoring dimensions (6 structure + 5 spec).
 
+**How these are actually scored:** the 6 structure dimensions below are classified
+deterministically in code (`app/structure_scorer.py`) against the exact thresholds shown — no
+Jev/LLM call, no confidence value. Only the 5 spec dimensions are judged by Jev, because judging
+prose is a genuine judgment call these tables can't express as thresholds. See
+`docs/design/structure-scoring.md` and `docs/design/spec-scoring.md` for the mechanics.
+
 ## Structure Dimensions (Code Quality)
 
 ### 1. Coupling (Weight 21%)
@@ -216,20 +222,22 @@ combined_score = (structure_weighted_total × 0.5) + (spec_weighted_total × 0.5
 
 ## Confidence Interpretation
 
-Each Jev answer comes with confidence (0–1). For the 6 structure dimensions (Score
-primitives), this confidence is returned directly by Jev alongside a continuous
-score. For the 5 spec dimensions (Noul primitives), Jev returns only a single
-yes-probability; code derives both the yes/no answer and this confidence from it
-(`confidence = abs(probability - 0.5) * 2`) — see `docs/design/spec-scoring.md`.
+Confidence only applies to the **5 spec dimensions** — structure scores are computed
+deterministically (`app/structure_scorer.py`) and have no confidence value; a fixed rule has no
+genuine uncertainty to report.
+
+For spec dimensions (Noul primitives), Jev returns only a single yes-probability; code derives
+both the yes/no answer and this confidence from it (`confidence = abs(probability - 0.5) * 2`)
+— see `docs/design/spec-scoring.md`.
 
 | Confidence Range | Meaning |
 |------------------|---------|
-| **0.85–1.0** | Very clear signal. Metrics/spec strongly support the rating. |
+| **0.85–1.0** | Very clear signal. Spec strongly supports the rating. |
 | **0.70–0.85** | Clear signal with some ambiguity. Most evidence points one way. |
 | **0.50–0.70** | Weak signal. Mixed evidence; worth manual inspection. |
 | **< 0.50** | Very ambiguous. Jev found conflicting signals. Must review manually. |
 
-**Action for judges:** If average confidence on a submission is < 0.60, that submission needs manual review regardless of score.
+**Action for judges:** If average spec confidence on a submission is < 0.60, that submission needs manual review regardless of score.
 
 ---
 
@@ -254,5 +262,8 @@ Checked after scoring, independent of dimension scores:
 ## Using This Rubric
 
 1. **For judges:** These are your scoring anchors. Use them to understand what the numbers mean.
-2. **For developers:** Implement Jev questions following these criteria (see design/*.md for details).
-3. **For configuration:** Thresholds and ranges are in config.yaml; adjust if your hackathon has different standards.
+2. **For developers:** Structure thresholds are hardcoded in `app/structure_scorer.py`; spec
+   Jev questions and score ranges follow `design/spec-scoring.md`.
+3. **For configuration:** Spec score ranges and all red-flag thresholds are in `config.yaml`;
+   adjust if your hackathon has different standards. Structure thresholds are not
+   currently configurable (see `app/structure_scorer.py` to change them).

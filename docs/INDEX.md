@@ -23,7 +23,7 @@ Quick navigation for all documentation. (All paths below are relative to `docs/`
 
 ### Developers (Building It)
 - [DEVELOPER_CHECKLIST.md](DEVELOPER_CHECKLIST.md) — Step-by-step implementation guide
-- [design/structure-scoring.md](design/structure-scoring.md) — Jev Score primitives (6 dimensions)
+- [design/structure-scoring.md](design/structure-scoring.md) — Deterministic scoring rules, no Jev (6 dimensions)
 - [design/spec-scoring.md](design/spec-scoring.md) — Jev Choice + Noul primitives (5 dimensions)
 - [design/report-generation.md](design/report-generation.md) — LLM prompt, fallback, validation
 

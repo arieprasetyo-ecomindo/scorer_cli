@@ -1,15 +1,11 @@
-"""Call Claude to write a concise narrative markdown summary from Jev scores."""
+"""Call Claude to write a concise narrative markdown summary from the scores."""
 
 import json
 
 from anthropic import Anthropic
 
-from app.jev_scorer import (
-    SPEC_WEIGHTS,
-    STRUCTURE_WEIGHTS,
-    weighted_spec_total,
-    weighted_structure_total,
-)
+from app.jev_scorer import SPEC_WEIGHTS, weighted_spec_total
+from app.structure_scorer import STRUCTURE_WEIGHTS, weighted_structure_total
 
 PROMPT_TEMPLATE = """You are writing a concise hackathon judge report. Be brief - this is a \
 summary, not an essay. Use plain, direct language.
@@ -43,10 +39,10 @@ Keep total output under 200 words. Markdown prose only - no preamble, no JSON, n
 """
 
 
-def build_prompt(jev_scores: dict | None, spec_scores: dict | None, red_flags: list[str]) -> str:
+def build_prompt(structure_scores: dict | None, spec_scores: dict | None, red_flags: list[str]) -> str:
     structure_summary = (
-        {dim: round(jev_scores[dim]["score_0_10"], 1) for dim in STRUCTURE_WEIGHTS}
-        if jev_scores
+        {dim: round(structure_scores[dim]["score_0_10"], 1) for dim in STRUCTURE_WEIGHTS}
+        if structure_scores
         else {}
     )
     spec_summary = (
@@ -62,7 +58,7 @@ def build_prompt(jev_scores: dict | None, spec_scores: dict | None, red_flags: l
 
 
 def generate_narrative(
-    jev_scores: dict | None,
+    structure_scores: dict | None,
     spec_scores: dict | None,
     red_flags: list[str],
     client: Anthropic,
@@ -73,7 +69,7 @@ def generate_narrative(
     # messages.create() - it's been replaced by an `effort` level in output_config,
     # which controls reasoning depth, not randomness. There's no direct equivalent
     # for "low temperature = consistent output" here, so we don't set one.
-    prompt = build_prompt(jev_scores, spec_scores, red_flags)
+    prompt = build_prompt(structure_scores, spec_scores, red_flags)
     response = client.messages.create(
         model=model,
         max_tokens=max_tokens,
@@ -82,11 +78,11 @@ def generate_narrative(
     return response.content[0].text
 
 
-def generate_fallback_narrative(jev_scores: dict | None, spec_scores: dict | None) -> str:
+def generate_fallback_narrative(structure_scores: dict | None, spec_scores: dict | None) -> str:
     """Auto-generated markdown if the LLM call fails - scores only, no prose."""
     lines = ["## Summary", "", "_LLM unavailable - auto-generated summary (scores only)._"]
-    if jev_scores:
-        lines += ["", f"**Structure weighted total:** {weighted_structure_total(jev_scores):.1f} / 10"]
+    if structure_scores:
+        lines += ["", f"**Structure weighted total:** {weighted_structure_total(structure_scores):.1f} / 10"]
     if spec_scores:
         lines += ["", f"**Spec weighted total:** {weighted_spec_total(spec_scores):.1f} / 10"]
     return "\n".join(lines)
