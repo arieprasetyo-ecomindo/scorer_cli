@@ -14,9 +14,10 @@ from app.metrics import (
     extract_spec_text_from_zip,
     load_graph,
 )
-from app.report_generator import render_report
+from app.report_generator import compute_all_red_flags, render_report
 
 FIXTURES_DIR = Path("fixtures")
+REPORTS_DIR = Path("reports")
 
 
 def report(team_name: str) -> None:
@@ -99,6 +100,49 @@ def report(team_name: str) -> None:
         codebase_modules,
         spec_skip_reason,
     )
+
+    if jev_scores is not None or spec_scores is not None:
+        red_flags_cfg = config.get("red_flags", {})
+        flags = compute_all_red_flags(
+            graph_metrics, complexity_metrics, spec_scores, spec_text, codebase_modules, red_flags_cfg
+        )
+
+        report_cfg = config.get("report_generation", {})
+        narrative = None
+        if os.environ.get("ANTHROPIC_API_KEY"):
+            from anthropic import Anthropic, APIError
+
+            from app.llm_reporter import generate_fallback_narrative, generate_narrative
+
+            try:
+                narrative = generate_narrative(
+                    jev_scores,
+                    spec_scores,
+                    flags,
+                    Anthropic(),
+                    model=report_cfg.get("model", "claude-opus-5"),
+                    max_tokens=report_cfg.get("max_tokens", 600),
+                )
+            except APIError as e:
+                print(f"Claude narrative generation failed ({e}); using fallback summary.")
+                narrative = generate_fallback_narrative(jev_scores, spec_scores)
+        else:
+            from app.llm_reporter import generate_fallback_narrative
+
+            narrative = generate_fallback_narrative(jev_scores, spec_scores)
+
+        from app.report_writer import write_markdown_report
+
+        report_path = write_markdown_report(
+            team_name,
+            REPORTS_DIR,
+            jev_scores,
+            spec_scores,
+            narrative,
+            flags,
+            config.get("weights", {"structure": 0.5, "spec": 0.5}),
+        )
+        print(f"Markdown report written to {report_path}")
 
 
 def main() -> None:

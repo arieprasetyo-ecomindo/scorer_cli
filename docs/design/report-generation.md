@@ -100,13 +100,16 @@ In `config.yaml`:
 ```yaml
 report_generation:
   model: "claude-opus-5"  # or claude-haiku for cost
-  temperature: 0.3        # Low: factual, consistent tone
   max_tokens: 2000        # Usually 1200–1800 used
   max_retries: 1
   retry_delay_seconds: 2
 ```
 
-**Why low temperature:** We want factual explanations grounded in numbers, not creative flourishes.
+**No `temperature` setting:** the real `anthropic-sdk` (checked at v1.6.0) has no
+`temperature` parameter on `messages.create()` anymore — it's been replaced by an
+`effort` level in `output_config`, which controls reasoning depth, not output
+randomness. There's no direct equivalent, so the prompt itself does the work of
+keeping output factual and consistent (see `app/llm_reporter.py`).
 
 ## Fallback Strategy
 
@@ -274,7 +277,6 @@ Current: `claude-opus-5`
 ```yaml
 report_generation:
   model: "claude-haiku"  # Haiku is ~5× cheaper
-  temperature: 0.3
   max_tokens: 1500
 ```
 

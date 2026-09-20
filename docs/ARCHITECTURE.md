@@ -218,8 +218,8 @@ typesafe:
 report_generation:
   api_key_env: "ANTHROPIC_API_KEY"
   model: "claude-opus-5"  # or claude-haiku for cost
-  temperature: 0.3
   max_tokens: 2000
+  # No "temperature" - the real anthropic-sdk (v1.6.0) doesn't have that param
 
 weights:
   structure: 0.5

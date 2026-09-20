@@ -26,8 +26,10 @@ report_generation:
   # Use claude-opus-5 for best quality, claude-haiku for cost
   model: "claude-opus-5"
 
-  # Temperature: keep low for consistent, factual writing
-  temperature: 0.3
+  # Note: the real anthropic-sdk (checked at v1.6.0) has no `temperature` param on
+  # messages.create() anymore - it's been replaced by an `effort` level in
+  # output_config, which controls reasoning depth, not output randomness. There's
+  # no direct equivalent, so we don't set one.
 
   # Max tokens for generated report (includes all dimensions + summary)
   max_tokens: 2000

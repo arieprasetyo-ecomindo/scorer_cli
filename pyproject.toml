@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Automated hackathon submission scoring: code structure + Spec-Driven Development quality."
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic>=1.6.0",
     "lizard>=1.24.0",
+    "matplotlib>=3.11.2",
     "networkx>=3.6.1",
     "python-dotenv>=1.2.3",
     "pyyaml>=6.0.3",

@@ -105,7 +105,7 @@ This checklist guides you through implementing scorer_cli from scratch.
 - [ ] Function `generate_report_markdown(submission_id, scored_data, config, metrics)`:
   - Build concise JSON payload (scored_data + metrics snapshot)
   - Build prompt (see `design/report-generation.md`)
-  - Call Claude with low temperature (0.3) for consistency
+  - Call Claude (no `temperature` param - not supported by the real anthropic-sdk)
   - Validate markdown output
   - Return markdown string
 - [ ] Implement fallback: `generate_fallback_markdown(scored_data)`
@@ -317,7 +317,7 @@ uv run pytest tests/ -v
 | Jev API 401 | Check TYPESAFE_API_KEY, verify it's from TypeSafe dashboard |
 | Claude API 401 | Check ANTHROPIC_API_KEY, verify it's from Anthropic console |
 | Jev timeout | Normal; retry logic handles it. Check if TypeSafe status page shows issues. |
-| Markdown formatting odd | Check LLM prompt in `design/report-generation.md`, verify temperature is 0.3 |
+| Markdown formatting odd | Check LLM prompt in `design/report-generation.md` |
 | Scores don't match rubric | Check `design/scoring-math.md` formulas, verify weights in config.yaml |
 | Tests fail | Run with `-v` flag, check assertion messages, read test file for expected behavior |
 

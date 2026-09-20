@@ -6,9 +6,26 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from app.chart_generator import HIGH_COLOR, LOW_COLOR, MID_COLOR
 from app.jev_scorer import SPEC_WEIGHTS, STRUCTURE_WEIGHTS, weighted_spec_total, weighted_structure_total
 
 TEMPLATED_PLACEHOLDER_RE = re.compile(r"\[(TODO|TBD|description here|FIXME)\]", re.IGNORECASE)
+
+
+def _score_color(score: float) -> str:
+    if score < 4:
+        return LOW_COLOR
+    if score < 7:
+        return MID_COLOR
+    return HIGH_COLOR
+
+
+def score_bar(score: float, width: int = 10, max_score: float = 10.0) -> str:
+    """A little inline meter bar, e.g. '[green]████████░░░░[/green]', for a 0-10 score."""
+    filled = round(width * max(0.0, min(score, max_score)) / max_score)
+    bar = "█" * filled + "░" * (width - filled)
+    color = _score_color(score)
+    return f"[{color}]{bar}[/{color}]"
 
 
 def compute_graph_red_flags(metrics: dict, red_flags_cfg: dict) -> list[str]:
@@ -78,6 +95,23 @@ def compute_spec_red_flags(
     return flags
 
 
+def compute_all_red_flags(
+    graph_metrics: dict,
+    complexity_metrics: dict | None,
+    spec_scores: dict | None,
+    spec_text: str | None,
+    codebase_modules: list[str] | None,
+    red_flags_cfg: dict,
+) -> list[str]:
+    """All red flags for a submission, for reuse outside the terminal report (e.g. markdown)."""
+    flags = compute_graph_red_flags(graph_metrics, red_flags_cfg)
+    if complexity_metrics is not None:
+        flags += compute_complexity_red_flags(complexity_metrics, red_flags_cfg)
+    if spec_scores is not None:
+        flags += compute_spec_red_flags(spec_scores, spec_text or "", codebase_modules or [], red_flags_cfg)
+    return flags
+
+
 def render_graph_section(console: Console, metrics: dict) -> None:
     summary = Table(title="Graph Metrics", header_style="bold magenta")
     summary.add_column("Metric")
@@ -131,17 +165,19 @@ def render_complexity_section(console: Console, metrics: dict) -> None:
 
 def render_jev_structure_section(console: Console, jev_scores: dict) -> float:
     table = Table(title="Structure Quality (Jev)", header_style="bold magenta")
-    table.add_column("Dimension")
-    table.add_column("Weight", justify="right")
-    table.add_column("Score", justify="right")
-    table.add_column("Jev Level", justify="right")
-    table.add_column("Confidence", justify="right")
+    table.add_column("Dimension", no_wrap=True)
+    table.add_column("Weight", justify="right", no_wrap=True)
+    table.add_column("Score", justify="right", no_wrap=True)
+    table.add_column("", no_wrap=True)
+    table.add_column("Jev Level", justify="right", no_wrap=True)
+    table.add_column("Confidence", justify="right", no_wrap=True)
     for dim, weight in STRUCTURE_WEIGHTS.items():
         answer = jev_scores[dim]
         table.add_row(
             dim.replace("_", " ").title(),
             f"{weight:.0%}",
             f"{answer['score_0_10']:.1f} / 10",
+            score_bar(answer["score_0_10"]),
             f"{answer['level']} ({answer['level_label']})",
             f"{answer['confidence']:.0%}",
         )
@@ -159,17 +195,19 @@ def render_jev_spec_section(console: Console, spec_scores: dict) -> float:
     )
 
     table = Table(title="Spec Quality (Jev)", header_style="bold magenta")
-    table.add_column("Dimension")
-    table.add_column("Weight", justify="right")
-    table.add_column("Score", justify="right")
-    table.add_column("Jev Answer", justify="right")
-    table.add_column("Confidence", justify="right")
+    table.add_column("Dimension", no_wrap=True)
+    table.add_column("Weight", justify="right", no_wrap=True)
+    table.add_column("Score", justify="right", no_wrap=True)
+    table.add_column("", no_wrap=True)
+    table.add_column("Jev Answer", justify="right", no_wrap=True)
+    table.add_column("Confidence", justify="right", no_wrap=True)
     for dim, weight in SPEC_WEIGHTS.items():
         answer = spec_scores[dim]
         table.add_row(
             dim.replace("_", " ").title(),
             f"{weight:.0%}",
             f"{answer['score_0_10']:.1f} / 10",
+            score_bar(answer["score_0_10"]),
             answer["answer"],
             f"{answer['confidence']:.0%}",
         )
@@ -228,10 +266,12 @@ def render_report(
     if structure_total is not None and spec_total is not None:
         weights = config.get("weights", {"structure": 0.5, "spec": 0.5})
         combined = structure_total * weights["structure"] + spec_total * weights["spec"]
+        meter = score_bar(combined, width=40)
         console.print(
             Panel(
                 f"[bold]{combined:.1f} / 10[/bold]  "
-                f"(structure {weights['structure']:.0%} + spec {weights['spec']:.0%})",
+                f"(structure {weights['structure']:.0%} + spec {weights['spec']:.0%})\n\n"
+                f"{meter} {combined / 10:.0%}",
                 title="Combined Score",
                 border_style="cyan",
             )
