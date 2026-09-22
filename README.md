@@ -142,6 +142,16 @@ That's the only command today — see [Roadmap](#roadmap) for `run-all`/batch sc
 See `docs/spec/rubrics.md` for the complete rubric, and `docs/design/spec-scoring.md` for how
 spec scoring actually derives an answer + confidence from Jev's single Noul probability.
 
+## Scoring Rubric Overview
+
+- **Score scale per dimension:** 0, 2.5, 5, 7.5, 10 (mapped from Level 1–5)
+- **Structure scoring:** deterministic threshold classification in code (no API call)
+- **Spec scoring:** Jev judges 5 SDD dimensions from spec text
+- **Dimension weights:**
+  - Structure (6 dims): Coupling 21%, Circular Dependencies 17%, Dependency Depth 13%, Cyclomatic Complexity 21%, Function Size 13%, Betweenness Centrality 15%
+  - Spec (5 dims): Clarity & Testability 25%, Scope Boundary 15%, Internal Consistency 15%, Traceability 25%, Substance Over Polish 20%
+- **Combined score:** `combined = (structure_total × structure_weight) + (spec_total × spec_weight)` (defaults: 0.5 / 0.5 in `config.yaml`)
+
 ## Configuration
 
 Copy `config.yaml.example` to `config.yaml`. Fields actually read by the code today:
